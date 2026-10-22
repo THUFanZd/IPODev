@@ -1,6 +1,6 @@
 ---
 name: ipo-dev
-description: Visualize a coding plan with a concise step overview, plain-language inputs and outputs, per-output source connections, and expandable raw data. Read inline HTML annotations to guide requested changes.
+description: Visualize a coding plan with plain-language inputs and outputs, source connections, and a running example showing concrete data transformations. Read inline HTML annotations to guide requested changes.
 ---
 
 # IPO Dev
@@ -15,6 +15,7 @@ description: Visualize a coding plan with a concise step overview, plain-languag
 4. 按每个输出建立 process.derivations：outputId 对应哪个输出，inputIds 精确列出生成它所用的输入，steps 用简短文字说明这些输入怎样逐步变成这个输出。多输出必须分别说明，不能把所有输入随意连接到每个输出。输出粒度按用户理解的产物选择；如果一个技术对象包装了来源或变换明显不同的业务结果（如指标卡、净值曲线、交易表），拆成可独立解释的输出，不用一个“展示对象”掩盖关系。具体字段映射、规则、代码及原始前后值放进 mappings / rules / code / trace，按需展开。
 5. 输入来源、必需字段或会改变结果的处理规则没有明确时，向用户问清楚，在对应节点记录问题及影响。真实文件内容用 actual，取自文件的节选用 excerpt，拟定方案中的样例用 illustrative；不能把示意值写成执行结果。不要为当前任务之外的业务编造需求。
 6. 按 [references/format.md](references/format.md) 写 schema v2 的 project.json。用户需求是模型的上下文；节点是目标功能的数据变换，不是 agent 的开发动作。保留稳定 ID 与批注锚点。新方案用 plan；已有实现用 review 并关联源码。
+   同时填写 runningExample：用同一个小而完整的具体案例串起全部环节，给每项输入输出提供具体值和简短说明；后一步引用前一步同一 artifact 的示例值，不各自编造独立样例。为每项输出逐次写清“变化前 → 具体操作 → 变化后”，包括起作用的数值、筛选结果或中间内容，不只重复抽象处理规则。核对计算和跨环节值的一致性。示意案例标为 illustrative，只有经实际执行核实的内容才能标为 actual；规则未明确时先问用户，不为补齐案例擅自决定。
 7. 运行 `node <skill>/scripts/render.mjs --project <项目目录>`；用 `node <skill>/scripts/serve.mjs --project <项目目录> --port 4317` 打开本机保存服务。首页是所有环节的简洁总览，点击环节以淡出/淡入进入详情。检查每条连线是否对应真实输入与输出，原始数据是否默认折叠，默认文案是否能让人看懂在处理什么。
 8. 用户添加批注后，服务写入 HTML 的 ipo-feedback 数据块和 feedback.json。离线时保存带批注的 HTML 副本。
 9. 用户要求按批注修改时，解析 HTML 的 ipo-model / ipo-feedback JSON，不执行脚本。根据 nodeId/field/artifact/derivation 定位，修改本任务内的方案和实现；未明部分继续询问。
@@ -27,6 +28,7 @@ description: Visualize a coding plan with a concise step overview, plain-languag
 - **总览**：所有环节的卡片。每张只显示环节名称、核心输入、核心输出及简短说明；不铺开文件路径、字段表或 JSON。
 - **详情**：输入和输出先展示业务名称及一句话说明。每项用小入口折叠收纳原始数据、字段含义及来源。选择某个输出，高亮它的输入连线，中间按顺序说明输入如何变成该输出；可切换其他输出。
 - **输入出处**：每项输入的简短说明旁直接标注“原始输入”或“来自第 N 步的输出”，不藏在折叠区。根据 artifact.producedBy 与页面步骤顺序确定来源，不猜测出处。
+- **视图切换**：页顶保留“方案说明 / 具体示例”开关，默认说明视图；切换后保留当前环节和所选输出。示例总览展示各环节的具体输入输出，详情沿用来源连线，直接展示具体内容与逐次变化；原始结构仍按需展开。示例缺失时明确提示，不拿零散 artifact.example 冒充贯穿案例。示例批注与说明批注分别定位，切换不能丢失草稿。此视图演示数据，不在浏览器执行项目代码。
 - **细节按需展开**：字段映射、代码、原始前后值与边界规则保留在折叠区，不把整份技术文档直接铺在首屏。
 - **交互**：总览与详情淡出/淡入切换，支持返回、浏览器后退和减少动态效果的系统偏好。批注仍贴在对应内容旁并保存，不引入审批或任务状态流程。
 

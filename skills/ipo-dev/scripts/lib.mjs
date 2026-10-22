@@ -9,7 +9,7 @@ export function outputDerivations(n){
  if(n.process.derivations?.length)return n.process.derivations;
  return n.output.artifactIds.map(id=>({id:'output-'+id,outputId:id,inputIds:n.output.artifactIds.length===1?[...n.input.artifactIds]:[],steps:[n.process.description],traceIds:n.trace.map(t=>t.id),legacy:true,uncertain:n.output.artifactIds.length>1}));
 }
-export function anchors(n){return new Set(['input','process','output',...(n.input.artifactIds||[]).concat(n.output.artifactIds||[]).map(id=>'artifact:'+id),...n.process.rules.map(x=>'rule:'+x.id),...n.trace.map(x=>'trace:'+x.id),...n.questions.map(x=>'question:'+x.id),...outputDerivations(n).map(x=>'derivation:'+x.id)]);}
+export function anchors(n,example){const step=example?.steps.find(s=>s.nodeId===n.id);return new Set(['input','process','output',...(n.input.artifactIds||[]).concat(n.output.artifactIds||[]).map(id=>'artifact:'+id),...n.process.rules.map(x=>'rule:'+x.id),...n.trace.map(x=>'trace:'+x.id),...n.questions.map(x=>'question:'+x.id),...outputDerivations(n).map(x=>'derivation:'+x.id),...(step?[...n.input.artifactIds.concat(n.output.artifactIds).map(id=>'example:artifact:'+id),...step.outputs.flatMap(o=>['example:output:'+o.outputId,...o.changes.map(c=>'example:change:'+c.id)])]:[])]);}
 export function validateModel(m){
  const require=(ok,message)=>{if(!ok)throw Error(message);};const text=x=>typeof x==='string'&&x.trim().length>0;
  require(m.schemaVersion===2&&text(m.id)&&Number.isSafeInteger(m.revision)&&m.revision>0,'Invalid model identity (schema v2 required)');
@@ -35,7 +35,17 @@ export function validateModel(m){
  }
  for(const a of m.artifacts.filter(a=>a.producedBy))require(m.nodes.find(n=>n.id===a.producedBy).output.artifactIds.includes(a.id),'Producer does not output artifact: '+a.id);
  for(let i=1;i<m.flow.length;i++)require(m.nodes.some(n=>n.input.artifactIds.includes(m.flow[i-1])&&n.output.artifactIds.includes(m.flow[i])),'Disconnected dataflow chain');
- const visiting=new Set(),done=new Set();function visit(id){require(!visiting.has(id),'Dependency cycle');if(done.has(id))return;visiting.add(id);m.nodes.find(n=>n.id===id).dependsOn.forEach(visit);visiting.delete(id);done.add(id);}m.nodes.forEach(n=>visit(n.id));return m;
+ const visiting=new Set(),done=new Set();function visit(id){require(!visiting.has(id),'Dependency cycle');if(done.has(id))return;visiting.add(id);m.nodes.find(n=>n.id===id).dependsOn.forEach(visit);visiting.delete(id);done.add(id);}m.nodes.forEach(n=>visit(n.id));
+ if(m.runningExample!==undefined){
+  const e=m.runningExample;
+  require(e&&text(e.id)&&text(e.title)&&text(e.summary)&&['actual','excerpt','illustrative'].includes(e.sampleKind),'Invalid running example identity');
+  require(Array.isArray(e.values)&&e.values.length===artifacts.size&&new Set(e.values.map(v=>v.artifactId)).size===e.values.length&&e.values.every(v=>artifacts.has(v.artifactId)&&text(v.summary)&&Object.hasOwn(v,'value')),'Running example needs one concrete value per artifact');
+  require(Array.isArray(e.steps)&&e.steps.length===m.nodes.length&&new Set(e.steps.map(s=>s.nodeId)).size===e.steps.length,'Running example must cover every step');
+  for(const s of e.steps){const n=m.nodes.find(n=>n.id===s.nodeId);require(n&&Array.isArray(s.outputs)&&s.outputs.length===n.output.artifactIds.length&&new Set(s.outputs.map(o=>o.outputId)).size===s.outputs.length,'Invalid running example step outputs');
+   const changes=new Set();for(const o of s.outputs){require(n.output.artifactIds.includes(o.outputId)&&Array.isArray(o.changes)&&o.changes.length>0,'Invalid running example output');for(const c of o.changes){require(text(c.id)&&!changes.has(c.id)&&text(c.before)&&text(c.operation)&&text(c.after),'Running example needs unique, readable before/operation/after changes');changes.add(c.id);}}
+  }
+ }
+ return m;
 }
 export function emptyFeedback(m){return{schemaVersion:1,projectId:m.id,projectRevision:m.revision,version:0,comments:[]};}
 export function validateFeedback(f,m,previous){
@@ -43,7 +53,7 @@ export function validateFeedback(f,m,previous){
  for(const c of f.comments){
   if(typeof c.id!=='string'||!c.id||typeof c.nodeId!=='string'||typeof c.field!=='string'||typeof c.body!=='string'||!c.body.trim()||c.body.length>10000||!Number.isFinite(Date.parse(c.createdAt))||(c.agentReply!==undefined&&(typeof c.agentReply!=='string'||c.agentReply.length>20000)))throw Error('Invalid note');
   const n=m.nodes.find(n=>n.id===c.nodeId),old=previous?.comments.find(x=>x.id===c.id);
-  if((!n||!anchors(n).has(c.field))&&(!old||['nodeId','field','body','createdAt'].some(k=>c[k]!==old[k])))throw Error('Invalid note anchor');
+  if((!n||!anchors(n,m.runningExample).has(c.field))&&(!old||['nodeId','field','body','createdAt'].some(k=>c[k]!==old[k])))throw Error('Invalid note anchor');
  }
  for(const old of previous?.comments||[]){if(!f.comments.some(c=>c.id===old.id))throw Error('Existing notes must be preserved');}
  return f;

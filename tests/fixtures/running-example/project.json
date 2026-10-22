@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2, "id": "running-example-preview", "revision": 1,
+  "title": "从三笔订单，到一份金额摘要",
+  "subtitle": "Running example 功能预览", "goal": "筛选已付款订单，汇总金额，再生成可阅读的摘要。",
+  "scope": "仅用于验证 IPODev 示例视图的独立示意案例，不执行订单业务代码。", "mode": "plan",
+  "artifacts": [
+    {"id":"orders","name":"原始订单","summary":"待处理的一组订单，包含状态和金额。","kind":"data","location":"示意订单输入","format":"JSON","sampleKind":"illustrative","fields":[{"path":"amount","type":"number","meaning":"订单金额，单位元"},{"path":"status","type":"string","meaning":"paid 为已付款，cancelled 为已取消"}],"example":[{"amount":120,"status":"paid"},{"amount":80,"status":"paid"},{"amount":50,"status":"cancelled"}]},
+    {"id":"paid-orders","name":"已付款订单","summary":"去除已取消订单后，可以参与汇总的订单。","kind":"data","location":"筛选环节的输出","format":"JSON","sampleKind":"illustrative","producedBy":"filter","fields":[{"path":"amount","type":"number","meaning":"已付款订单的金额，单位元"},{"path":"status","type":"string","meaning":"订单付款状态"}],"example":[{"amount":120,"status":"paid"},{"amount":80,"status":"paid"}]},
+    {"id":"total","name":"付款金额合计","summary":"所有已付款订单的金额总和。","kind":"data","location":"汇总环节的输出","format":"JSON","sampleKind":"illustrative","producedBy":"sum","fields":[{"path":"total","type":"number","meaning":"已付款金额合计，单位元"}],"example":{"total":200}},
+    {"id":"report","name":"金额摘要","summary":"供用户阅读的一句话汇总结果。","kind":"data","location":"摘要环节的输出","format":"text","sampleKind":"illustrative","producedBy":"format","fields":[{"path":"text","type":"string","meaning":"含金额和单位的摘要"}],"example":"已付款金额合计：200 元。"}
+  ],
+  "flow":["orders","paid-orders","total","report"],
+  "nodes":[
+    {"id":"filter","revision":1,"title":"筛选已付款订单","summary":"排除不参与汇总的订单。","dependsOn":[],"input":{"summary":"含状态与金额的订单","description":"原始订单输入。","artifactIds":["orders"]},"output":{"summary":"仅包含已付款的订单","description":"保留付款成功的订单。","artifactIds":["paid-orders"]},"process":{"description":"只保留 paid 状态的订单。","rules":[],"errors":[],"derivations":[{"id":"keep-paid","outputId":"paid-orders","inputIds":["orders"],"steps":["检查每笔订单的付款状态。","保留已付款订单，排除已取消订单。"]}]},"trace":[{"id":"filter-trace","label":"去掉取消订单","before":"三笔订单","operation":"只保留 paid","after":"两笔订单"}],"questions":[]},
+    {"id":"sum","revision":1,"title":"汇总付款金额","summary":"把有效订单金额相加。","dependsOn":["filter"],"input":{"summary":"筛选后的已付款订单","description":"直接使用上一环节的输出。","artifactIds":["paid-orders"]},"output":{"summary":"已付款订单的金额合计","description":"已付款金额之和。","artifactIds":["total"]},"process":{"description":"取出金额，求和。","rules":[],"errors":[],"derivations":[{"id":"sum-paid","outputId":"total","inputIds":["paid-orders"],"steps":["取出各笔已付款订单的金额。","将这些金额相加，得到合计。"]}]},"trace":[{"id":"sum-trace","label":"金额相加","before":[120,80],"operation":"120 + 80","after":200}],"questions":[]},
+    {"id":"format","revision":1,"title":"生成可读摘要","summary":"把金额变成一句话。","dependsOn":["sum"],"input":{"summary":"已付款金额合计","description":"直接使用汇总环节的输出。","artifactIds":["total"]},"output":{"summary":"带有单位的一句话摘要","description":"供用户阅读的摘要。","artifactIds":["report"]},"process":{"description":"将金额写入摘要，注明单位元。","rules":[],"errors":[],"derivations":[{"id":"format-total","outputId":"report","inputIds":["total"],"steps":["读取汇总金额。","加上结果说明和金额单位。"]}]},"trace":[{"id":"format-trace","label":"写入摘要","before":200,"operation":"加上说明和单位","after":"已付款金额合计：200 元。"}],"questions":[]}
+  ],
+  "runningExample": {
+    "id":"three-orders","title":"用同一组订单，走完三个环节","summary":"120 元、80 元已付款，50 元已取消；最终只汇总已付款的 200 元。","sampleKind":"illustrative",
+    "values":[
+      {"artifactId":"orders","summary":"三笔订单：120 元已付款、80 元已付款、50 元已取消。","value":[{"amount":120,"status":"paid"},{"amount":80,"status":"paid"},{"amount":50,"status":"cancelled"}]},
+      {"artifactId":"paid-orders","summary":"留下两笔已付款订单：120 元、80 元。","value":[{"amount":120,"status":"paid"},{"amount":80,"status":"paid"}]},
+      {"artifactId":"total","summary":"付款金额合计为 200 元。","value":{"total":200}},
+      {"artifactId":"report","summary":"已付款金额合计：200 元。","value":"已付款金额合计：200 元。"}
+    ],
+    "steps":[
+      {"nodeId":"filter","outputs":[{"outputId":"paid-orders","changes":[{"id":"drop-cancelled","before":"120 元已付款、80 元已付款、50 元已取消。","operation":"检查付款状态，去掉已取消的 50 元订单。","after":"留下 120 元和 80 元两笔已付款订单。"}]}]},
+      {"nodeId":"sum","outputs":[{"outputId":"total","changes":[{"id":"extract-amounts","before":"两笔已付款订单：120 元、80 元。","operation":"取出两笔订单的金额，不再携带订单状态。","after":"得到待相加的金额：120、80。"},{"id":"add-amounts","before":"待相加的金额：120、80。","operation":"计算 120 + 80 = 200。","after":"付款金额合计为 200 元。"}]}]},
+      {"nodeId":"format","outputs":[{"outputId":"report","changes":[{"id":"write-summary","before":"付款金额合计为 200 元。","operation":"把 200 填入“已付款金额合计：… 元。”。","after":"已付款金额合计：200 元。"}]}]}
+    ]
+  }
+}

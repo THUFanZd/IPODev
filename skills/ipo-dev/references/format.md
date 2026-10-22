@@ -53,7 +53,31 @@ outputId 必须在本环节 output.artifactIds 中，inputIds 必须是本环节
 
 默认页先展示环节概览，点击进入详情后按所选输出绘制准确连线。输入输出默认只显示 name / summary，字段表和 JSON 默认折叠。原有 v2 模型不强制迁移；单输出可使用节点级说明，多输出缺少 derivations 时标记来源未拆分，不猜测连线。
 
-批注使用 nodeId 和 field 定位。field 可为 input / process / output / artifact:<id> / derivation:<id> / trace:<id> / rule:<id> / question:<id>。artifact 必须在该节点输入或输出中。切换视图与输出不能丢失其他位置的批注和未提交草稿。
+## 贯穿全流程的具体示例
+
+schema v2 可选顶层 `runningExample`；新生成页面应提供，旧模型缺失时保留说明视图并提示尚无完整示例，不从各个 artifact.example 自动拼凑。此字段是供审阅的数据演示，不是浏览器执行任务的指令。
+
+```json
+{
+  "id": "small-order-case",
+  "title": "用三笔订单走一遍",
+  "summary": "去掉取消订单，再汇总已付款金额。",
+  "sampleKind": "illustrative",
+  "values": [
+    {"artifactId": "orders", "summary": "三笔订单：已付款 120 元、已付款 80 元、已取消 50 元。", "value": [{"amount":120,"status":"paid"},{"amount":80,"status":"paid"},{"amount":50,"status":"cancelled"}]},
+    {"artifactId": "paid-orders", "summary": "留下两笔已付款订单：120 元、80 元。", "value": [{"amount":120,"status":"paid"},{"amount":80,"status":"paid"}]},
+    {"artifactId": "total", "summary": "已付款金额合计 200 元。", "value": {"total":200}}
+  ],
+  "steps": [
+    {"nodeId":"filter-orders","outputs":[{"outputId":"paid-orders","changes":[{"id":"keep-paid","before":"120 元已付款、80 元已付款、50 元已取消。","operation":"只保留已付款订单，去掉已取消的 50 元。","after":"120 元已付款、80 元已付款。"}]}]},
+    {"nodeId":"sum-orders","outputs":[{"outputId":"total","changes":[{"id":"add-amounts","before":"两笔订单的金额为 120 元、80 元。","operation":"相加：120 + 80 = 200。","after":"已付款金额合计 200 元。"}]}]}
+  ]
+}
+```
+
+示例随当前业务设计，不固定使用上面的订单案例。values 对每个 artifact 恰好一项；summary 直接写具体内容和数值，value 保留对应原始值供折叠查看。同一 artifact 在多个环节引用同一值，模板、配置等侧输入也需具体化。steps 对每个 node 恰好一项，outputs 恰好覆盖该节点全部输出；来源沿用 process.derivations，不重新编造连线。每个 changes 至少一项，id 在该节点内唯一，before / operation / after 均为可直接阅读的简短文本；连续变化的前后值应衔接，最后的结果须与对应 values 一致。sampleKind 使用 actual / excerpt / illustrative，页面显著区分已核实内容与示意内容，不把手工推演称为实际运行结果。
+
+批注使用 nodeId 和 field 定位。field 可为 input / process / output / artifact:<id> / derivation:<id> / trace:<id> / rule:<id> / question:<id>；示例使用 example:artifact:<artifactId> / example:output:<outputId> / example:change:<changeId>。artifact 必须在该节点输入或输出中，示例 output 与 change 必须属于该节点。切换视图与输出不能丢失其他位置的批注和未提交草稿。
 
 ```json
 {
