@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPODev · 输入、处理与输出</title>
+<style>
+:root{--ink:#26382e;--muted:#738078;--line:#dce3db;--green:#28684d;--paper:#fff;--bg:#f5f7f2;--mono:Consolas,'Cascadia Code',monospace}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.8 'Segoe UI','Microsoft YaHei',sans-serif}button,textarea{font:inherit}button{cursor:pointer;border:0;background:none;color:var(--green)}button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid #619f74;outline-offset:3px}header{position:sticky;top:0;z-index:5;min-height:66px;display:flex;gap:20px;align-items:center;justify-content:space-between;padding:12px 26px;background:#fff;border-bottom:1px solid var(--line)}.brand{font:bold 23px Georgia,serif;letter-spacing:-.6px}.brand span{color:var(--green)}.header-right{display:flex;gap:16px;align-items:center}.save-status{font-size:12px;color:var(--muted)}.save-status.error{color:#a35d25}.button{padding:7px 13px;border:1px solid #c7d4c7;background:#fff;border-radius:6px;font-size:12px}.button:hover{background:#edf4eb}.button.primary{background:var(--green);color:white;border-color:var(--green)}.layout{display:grid;grid-template-columns:200px minmax(0,1fr);max-width:1550px;margin:auto}.sidebar{padding:32px 18px}.sidebar-inner{position:sticky;top:98px}.sidebar-label{color:var(--muted);font-size:11px;letter-spacing:1px;margin:0 10px 12px}.step-link{display:flex;gap:10px;align-items:flex-start;text-decoration:none;color:#617265;padding:12px 10px;margin-bottom:6px;border-radius:6px;font-size:12px}.step-link:hover,.step-link.active{background:#e5eee1;color:var(--green)}.step-link .number{font:11px/2 var(--mono);color:#8a9b88}.sidebar-hint{font-size:11px;color:#879181;margin:26px 10px;line-height:1.9}main{padding:30px 32px 80px;min-width:0}.page-title{font-size:27px;line-height:1.5;letter-spacing:-.5px;margin:0 0 8px;font-weight:600}.subtitle{margin:0 0 10px;color:#627468;font-size:14px}.scope{margin:0;color:var(--muted);font-size:12px}.step{scroll-margin-top:88px;border-top:1px solid var(--line);margin-top:30px;padding-top:24px}.step-heading{display:flex;align-items:baseline;gap:12px;margin-bottom:5px}.step-heading .number{font:13px var(--mono);color:var(--green)}h2{font-size:20px;font-weight:600;margin:0}.summary{font-size:12px;color:var(--muted);margin:0 0 18px}.ipo{display:grid;grid-template-columns:1fr 1.12fr 1fr;gap:12px;align-items:stretch}.card{min-width:0;border:1px solid var(--line);border-radius:8px;background:white;padding:17px}.card.process{border-top:3px solid var(--green);padding-top:15px}.card-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}.letter{font:italic 24px Georgia,serif;color:#839879}.process .letter{color:var(--green)}h3{font-size:14px;margin:0;font-weight:600}.description{font-size:13px;margin:0 0 12px;line-height:1.9}.shape{font:11px/1.9 var(--mono);color:#6b8069;overflow-wrap:anywhere;margin:12px 0}.example-label{font-size:10px;color:#8a9983;margin-top:14px}.data{font:12px/1.9 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;color:#496647;margin:6px 0 0;background:#f4f8f0;border-radius:5px;padding:11px}.rules{margin:14px 0 0}.rule{border-top:1px solid #edf1e8;padding:10px 0 0;margin-top:9px;font-size:12px;line-height:1.9}.rule.unresolved{color:#95652d}.trace-title{font-size:14px;font-weight:600;margin:21px 0 10px}.trace{border:1px solid var(--line);border-radius:7px;background:white;margin-bottom:10px;padding:13px 16px}.trace-label{font-size:13px;font-weight:600;margin-bottom:10px}.trace-columns{display:grid;grid-template-columns:1fr .8fr 1fr;gap:15px;align-items:start}.trace-part{min-width:0}.trace-part .label{font-size:10px;color:#8a9983}.trace-part pre{font:12px/1.9 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;margin:5px 0;color:#556d50}.operation{font-size:12px;color:#46704b;line-height:1.9;margin:5px 0}.boundary{font-size:12px;color:var(--muted);margin:14px 0;line-height:1.9}.boundary ul{margin:4px 0;padding-left:20px}.question{background:#fff8e9;border:1px solid #e5d8bb;border-radius:6px;padding:12px 15px;margin-top:12px;font-size:13px}.question p{margin:4px 0}.question small{color:#957b53}.annotation{margin-top:11px}.add-note{font-size:11px;padding:1px 0;color:#6c8d66;text-decoration:underline;text-decoration-color:#bfceba;text-underline-offset:3px}.note{border-left:2px solid #aac19c;background:#f0f5e9;padding:9px 11px;margin:9px 0;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}.note-label{font-size:10px;color:#78946c;margin-bottom:3px}.reply{border-top:1px solid #d6e1cc;margin-top:9px;padding-top:8px;color:#5d7351}.note-form{margin-top:9px}.note-form textarea{width:100%;min-height:80px;resize:vertical;border:1px solid #c6d3be;border-radius:5px;padding:9px;font-size:12px;background:#fff;line-height:1.8;color:var(--ink)}.note-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:5px}.note-actions button{font-size:11px}.orphaned{border-top:1px solid var(--line);margin-top:30px;padding-top:15px}.orphaned h2{font-size:15px}.orphaned p{font-size:12px;color:var(--muted)}.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2a4732;color:#fff;border-radius:6px;padding:9px 17px;font-size:12px;z-index:10;max-width:90vw}.save-retry{font-size:11px;text-decoration:underline}[hidden]{display:none!important}.highlight{outline:2px solid #94b985;outline-offset:4px}
+@media(max-width:1050px){.layout{grid-template-columns:165px minmax(0,1fr)}main{padding:26px 20px 60px}.ipo{grid-template-columns:1fr}.card{padding:16px}.trace-columns{grid-template-columns:1fr}.trace-part+.trace-part{border-top:1px solid #edf1e8;padding-top:7px}}
+@media(max-width:650px){header{padding:10px 15px;gap:10px;flex-wrap:wrap}.brand{font-size:21px}.header-right{gap:8px}.save-status{font-size:10px;max-width:155px}.button{font-size:11px;padding:6px 9px}.layout{display:block}.sidebar{padding:12px 15px 0}.sidebar-inner{position:static}.sidebar-label,.sidebar-hint{display:none}nav{display:grid;grid-template-columns:1fr 1fr;gap:3px}.step-link{padding:7px;font-size:11px;margin:0}main{padding:22px 15px 50px}.page-title{font-size:23px}h2{font-size:18px}.step{scroll-margin-top:105px;margin-top:25px}.subtitle{font-size:13px}.card .description{font-size:13px}}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+.flow-heading{font-size:12px;color:var(--muted);margin:23px 0 8px}.flow{display:flex;align-items:stretch;gap:7px;overflow-x:auto;padding:3px 2px 10px}.flow-item{min-width:145px;flex:1;display:block;background:#fff;border:1px solid #cfdcca;border-radius:7px;text-decoration:none;color:var(--ink);padding:10px 12px;font-size:12px}.flow-item:hover{border-color:#6c9866;background:#f0f6eb}.flow-letter{display:block;font:10px var(--mono);color:#7b9671;margin-bottom:6px}.flow-name{font-weight:600}.flow-format{font-size:10px;color:var(--muted);margin-top:4px}.flow-arrow{align-self:center;color:#8ca583}.artifact-preview{border-top:1px solid #e5ecdf;margin-top:14px;padding-top:12px;min-width:0}.artifact-header{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;font-weight:600}.artifact-kind{font:9px var(--mono);padding:1px 5px;border-radius:3px;background:#e7efdf;color:#607d52}.artifact-location{font:11px/1.8 var(--mono);overflow-wrap:anywhere;color:#607e55;margin:6px 0}.artifact-location strong{font-family:'Segoe UI','Microsoft YaHei',sans-serif;font-weight:400;color:#83947b;font-size:10px}.artifact-format{font-size:10px;color:#84917c}.field-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px;line-height:1.8;margin:10px 0}.field-table th{text-align:left;font-size:10px;color:#87957f;font-weight:400;border-bottom:1px solid #dce6d5;padding:4px 3px}.field-table td{padding:5px 3px;border-bottom:1px solid #edf2e7;vertical-align:top;overflow-wrap:anywhere}.field-table td:first-child{font-family:var(--mono);color:#5a7550}.field-table th:nth-child(1){width:38%}.field-table th:nth-child(2){width:27%}.artifact-preview .data{max-height:260px;overflow:auto;font-size:11px}.sample-label{display:inline-block;font-size:10px;color:#7c8e70;margin-top:5px}.sample-label.illustrative{color:#a47737}.artifact-links{font-size:10px;color:#819175;margin:8px 0;line-height:1.8}.artifact-links a{color:#597f4d;text-underline-offset:3px}.process-code{background:#f0f5ea;padding:10px;border-radius:5px;font:11px/1.8 var(--mono);color:#496a3f;white-space:pre-wrap;overflow-wrap:anywhere}.mapping-table{width:100%;border-collapse:collapse;table-layout:fixed;background:white;font-size:12px;border:1px solid var(--line);margin:8px 0 18px}.mapping-table th{text-align:left;font-size:11px;color:#75876c;font-weight:400;background:#edf3e7;padding:8px 12px}.mapping-table td{border-top:1px solid #e6eddf;padding:9px 12px;vertical-align:top;overflow-wrap:anywhere}.mapping-table td:first-child,.mapping-table td:last-child{font-family:var(--mono);font-size:11px}.mapping-title{font-size:13px;margin:19px 0 7px;font-weight:600}.data-io-label{font-size:10px;color:#85957c;margin:0 0 10px}.data-io-label a{color:var(--green)}
+@media(max-width:650px){.flow-item{min-width:145px}.mapping-table th,.mapping-table td{padding:7px;font-size:11px}.field-table{font-size:11px}}
+</style>
+</head>
+<body>
+<header><div class="brand">IPO<span>Dev</span></div><div class="header-right"><span class="save-status" id="save-status" role="status">正在读取页面备注…</span><button class="save-retry" id="retry-save" hidden>重试保存</button><button class="button" id="save-html">保存 HTML 副本</button></div></header>
+<div class="layout"><aside class="sidebar"><div class="sidebar-inner"><p class="sidebar-label">数据处理步骤</p><nav id="steps" aria-label="实现环节"></nav><p class="sidebar-hint">沿具体数据看实现：<br>来源文件与字段<br>处理操作与规则<br>中间数据与结果<br><br>批注直接写在对应内容下方。</p></div></aside><main><h1 class="page-title" id="title"></h1><p class="subtitle" id="subtitle"></p><p class="scope" id="scope"></p><div class="flow-heading">主数据流 · 点击数据对象查看对应步骤</div><nav class="flow" id="dataflow" aria-label="主数据流"></nav><div id="content"></div><div id="orphaned"></div></main></div>
+<div class="toast" id="toast" hidden role="status"></div>
+<script id="ipo-model" type="application/json">{
+  "schemaVersion": 2,
+  "id": "ipo-dev",
+  "revision": 3,
+  "title": "从 IPO 文件生成可批注页面",
+  "subtitle": "project.json 的文件内容，怎样变成浏览器中的步骤，以及批注怎样写回 HTML。",
+  "mode": "review",
+  "goal": "把结构化 IPO 模型与模板转换为可阅读、可批注的 HTML，并将批注持久化到同一 HTML。",
+  "scope": "文件与代码节选取自本项目。写入批注的请求和结果使用标明的交互样例；它们不代表已有用户批注。",
+  "flow": [
+    "model-file",
+    "parsed-model",
+    "embedded-html",
+    "step-dom",
+    "annotated-html"
+  ],
+  "artifacts": [
+    {
+      "id": "model-file",
+      "name": "project.json",
+      "kind": "file",
+      "location": "project.json",
+      "format": "UTF-8 JSON 文本",
+      "sampleKind": "excerpt",
+      "fields": [
+        {
+          "path": "title",
+          "type": "string",
+          "meaning": "页面显示的功能名称"
+        },
+        {
+          "path": "artifacts[]",
+          "type": "Artifact[]",
+          "meaning": "文件、数据对象、字段和样例"
+        },
+        {
+          "path": "nodes[].input.artifactIds",
+          "type": "string[]",
+          "meaning": "每一步消费的数据对象 ID"
+        },
+        {
+          "path": "nodes[].output.artifactIds",
+          "type": "string[]",
+          "meaning": "每一步产生的数据对象 ID"
+        }
+      ],
+      "example": "{\n  \"schemaVersion\": 2,\n  \"id\": \"ipo-dev\",\n  \"title\": \"从 IPO 文件生成可批注页面\",\n  \"nodes\": [\n    {\"id\": \"render-dom\", \"title\": \"渲染步骤内容\",\n     \"input\": {\"artifactIds\": [\"embedded-html\"]}}\n  ]\n}"
+    },
+    {
+      "id": "parsed-model",
+      "name": "内存中的模型对象",
+      "kind": "data",
+      "location": "render.mjs → model 变量",
+      "format": "JavaScript Object",
+      "sampleKind": "excerpt",
+      "producedBy": "parse-model",
+      "fields": [
+        {
+          "path": "model.title",
+          "type": "string",
+          "meaning": "与文件中的 title 保持一致"
+        },
+        {
+          "path": "model.nodes",
+          "type": "Node[4]",
+          "meaning": "4 个实际数据处理步骤"
+        },
+        {
+          "path": "model.artifacts",
+          "type": "Artifact[]",
+          "meaning": "按 ID 可查到字段与具体内容"
+        }
+      ],
+      "example": {
+        "title": "从 IPO 文件生成可批注页面",
+        "nodes": [
+          {
+            "id": "render-dom",
+            "title": "渲染步骤内容",
+            "input": {
+              "artifactIds": [
+                "embedded-html"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "template-file",
+      "name": "review.html 模板",
+      "kind": "file",
+      "location": "skills/ipo-dev/assets/review.html",
+      "format": "HTML + 内联 CSS / JavaScript",
+      "sampleKind": "excerpt",
+      "fields": [
+        {
+          "path": "ipo-model 脚本块",
+          "type": "JSON 占位位置",
+          "meaning": "填入完整模型"
+        },
+        {
+          "path": "ipo-feedback 脚本块",
+          "type": "JSON 占位位置",
+          "meaning": "填入原有批注"
+        },
+        {
+          "path": "render()",
+          "type": "JavaScript function",
+          "meaning": "把模型显示成具体页面"
+        }
+      ],
+      "example": "\u003cscript id=\"ipo-model\" type=\"application/json\">/*__IPO_MODEL__*/\u003c/script>\n\u003cscript id=\"ipo-feedback\" type=\"application/json\">/*__IPO_FEEDBACK__*/\u003c/script>"
+    },
+    {
+      "id": "feedback-file",
+      "name": "已有批注文件",
+      "kind": "file",
+      "location": "feedback.json",
+      "format": "UTF-8 JSON",
+      "sampleKind": "excerpt",
+      "fields": [
+        {
+          "path": "projectId",
+          "type": "string",
+          "meaning": "批注所属项目"
+        },
+        {
+          "path": "version",
+          "type": "integer",
+          "meaning": "防止旧窗口覆盖新内容"
+        },
+        {
+          "path": "comments[]",
+          "type": "Comment[]",
+          "meaning": "已有批注；初始可以为空"
+        }
+      ],
+      "example": {
+        "projectId": "ipo-dev",
+        "comments": []
+      }
+    },
+    {
+      "id": "embedded-html",
+      "name": "生成的 HTML 数据块",
+      "kind": "html",
+      "location": "index.html → #ipo-model / #ipo-feedback",
+      "format": "HTML 文件",
+      "sampleKind": "excerpt",
+      "producedBy": "embed-data",
+      "fields": [
+        {
+          "path": "#ipo-model.textContent",
+          "type": "JSON string",
+          "meaning": "完整 IPO 模型"
+        },
+        {
+          "path": "#ipo-feedback.textContent",
+          "type": "JSON string",
+          "meaning": "可供 agent 读取的批注"
+        }
+      ],
+      "example": "\u003cscript id=\"ipo-model\" type=\"application/json\">{\n  \"schemaVersion\": 2,\n  \"id\": \"ipo-dev\",\n  \"revision\": 3,\n  \"title\": \"从 IPO 文件生成可批注页面\","
+    },
+    {
+      "id": "step-dom",
+      "name": "浏览器中的步骤元素",
+      "kind": "dom",
+      "location": "index.html → #step-render-dom",
+      "format": "DOM 元素",
+      "sampleKind": "excerpt",
+      "producedBy": "render-dom",
+      "fields": [
+        {
+          "path": "section.id",
+          "type": "string",
+          "meaning": "由节点 ID 生成导航位置"
+        },
+        {
+          "path": "h2.textContent",
+          "type": "string",
+          "meaning": "步骤标题"
+        },
+        {
+          "path": ".artifact-preview",
+          "type": "DOM element",
+          "meaning": "输入/输出数据的来源、字段和内容"
+        },
+        {
+          "path": ".annotation[data-field]",
+          "type": "DOM element",
+          "meaning": "批注绑定到具体数据或变换"
+        }
+      ],
+      "example": "\u003csection class=\"step\" id=\"step-render-dom\">\n  …\n  \u003ch2>渲染步骤内容\u003c/h2>\n  …\n  \u003cdiv class=\"artifact-preview\" data-artifact=\"embedded-html\">\n    …具体文件、字段与内容…\n  \u003c/div>\n\u003c/section>"
+    },
+    {
+      "id": "note-request",
+      "name": "保存一条批注的请求",
+      "kind": "request",
+      "location": "PUT /api/feedback",
+      "format": "HTTP JSON body",
+      "sampleKind": "illustrative",
+      "fields": [
+        {
+          "path": "baseVersion",
+          "type": "integer",
+          "meaning": "当前已读取的反馈版本"
+        },
+        {
+          "path": "feedback.comments[].nodeId",
+          "type": "string",
+          "meaning": "批注对应步骤"
+        },
+        {
+          "path": "feedback.comments[].field",
+          "type": "string",
+          "meaning": "对应输入、数据对象或处理规则"
+        },
+        {
+          "path": "feedback.comments[].body",
+          "type": "string",
+          "meaning": "用户写下的原文"
+        }
+      ],
+      "example": {
+        "baseVersion": 0,
+        "feedback": {
+          "schemaVersion": 1,
+          "projectId": "ipo-dev",
+          "projectRevision": 3,
+          "version": 0,
+          "comments": [
+            {
+              "id": "note-01",
+              "nodeId": "render-dom",
+              "field": "artifact:embedded-html",
+              "body": "把这个 HTML 的两个 JSON 数据块都展开显示。",
+              "createdAt": "2026-10-19T08:00:00Z",
+              "agentReply": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "saved-notes",
+      "name": "持久化的批注数据",
+      "kind": "file",
+      "location": "feedback.json → comments[]",
+      "format": "JSON",
+      "sampleKind": "illustrative",
+      "producedBy": "save-note",
+      "fields": [
+        {
+          "path": "version",
+          "type": "integer",
+          "meaning": "每次成功保存后 +1"
+        },
+        {
+          "path": "comments[].nodeId / field",
+          "type": "string",
+          "meaning": "保留批注的定位信息"
+        },
+        {
+          "path": "comments[].body",
+          "type": "string",
+          "meaning": "保持用户原文"
+        }
+      ],
+      "example": {
+        "version": 1,
+        "comments": [
+          {
+            "id": "note-01",
+            "nodeId": "render-dom",
+            "field": "artifact:embedded-html",
+            "body": "把这个 HTML 的两个 JSON 数据块都展开显示。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "annotated-html",
+      "name": "带批注的 HTML 文件",
+      "kind": "html",
+      "location": "index.html → #ipo-feedback",
+      "format": "可由浏览器或 agent 读取的 HTML",
+      "sampleKind": "illustrative",
+      "producedBy": "save-note",
+      "fields": [
+        {
+          "path": "#ipo-model",
+          "type": "JSON data block",
+          "meaning": "保留原 IPO 描述"
+        },
+        {
+          "path": "#ipo-feedback.comments[]",
+          "type": "JSON data block",
+          "meaning": "包含刚保存的批注"
+        },
+        {
+          "path": "页面中的原位置",
+          "type": "DOM element",
+          "meaning": "刷新后由该 JSON 重新显示批注"
+        }
+      ],
+      "example": "\u003cscript id=\"ipo-feedback\" type=\"application/json\">{\n  …\n  \"comments\": [{\n    \"nodeId\": \"render-dom\",\n    \"field\": \"artifact:embedded-html\",\n    \"body\": \"把这个 HTML 的两个 JSON 数据块都展开显示。\"\n  }]\n}\u003c/script>"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "parse-model",
+      "revision": 3,
+      "title": "解析模型文件",
+      "summary": "project.json 文本 → 可按字段访问的 JavaScript 对象",
+      "dependsOn": [],
+      "input": {
+        "description": "读取磁盘上的模型文件内容。",
+        "artifactIds": [
+          "model-file"
+        ]
+      },
+      "process": {
+        "description": "以 UTF-8 读取文件，移除可能存在的 BOM，再调用 JSON.parse；校验节点、数据对象引用及其依赖。",
+        "code": "const text = fs.readFileSync(file, 'utf8').replace(/^\\uFEFF/, '');\nconst model = JSON.parse(text);\nvalidateModel(model);",
+        "rules": [
+          {
+            "id": "preserve-fields",
+            "text": "解析保留完整模型；下方只节选同一字段来展示文本与对象之间的变化。",
+            "state": "observed"
+          }
+        ],
+        "mappings": [
+          {
+            "from": "JSON 中的 title 字符串",
+            "operation": "JSON.parse，值不变",
+            "to": "model.title"
+          },
+          {
+            "from": "nodes 数组",
+            "operation": "解析数组与嵌套对象",
+            "to": "model.nodes[]"
+          },
+          {
+            "from": "input.artifactIds[]",
+            "operation": "校验 ID 指向已定义的数据对象",
+            "to": "可追踪来源的输入引用"
+          }
+        ],
+        "errors": [
+          "非法 JSON：停止生成并报告解析错误。",
+          "数据对象引用不存在或依赖形成循环：报告模型错误。"
+        ]
+      },
+      "output": {
+        "description": "供后续模板填充使用的模型对象；不在此处生成页面。",
+        "artifactIds": [
+          "parsed-model"
+        ]
+      },
+      "trace": [
+        {
+          "id": "decode",
+          "label": "文件字节 → 文本",
+          "before": "UTF-8 bytes: 7B 0A 20 20 22 73 63 68 65 6D 61 …",
+          "operation": "readFileSync(file, 'utf8')，若开头有 BOM 则移除。",
+          "after": "{\n  \"schemaVersion\": 2,\n  \"id\": \"ipo-dev\",\n  …\n}"
+        },
+        {
+          "id": "parse-fields",
+          "label": "同一字段：JSON 文本 → 对象属性",
+          "before": "\"title\": \"从 IPO 文件生成可批注页面\"",
+          "operation": "JSON.parse 后读取 model.title；其余模型字段也完整保留。",
+          "after": {
+            "model.title": "从 IPO 文件生成可批注页面",
+            "typeof model": "object",
+            "model.nodes.length": 4
+          }
+        }
+      ],
+      "questions": [],
+      "evidence": [
+        {
+          "path": "skills/ipo-dev/scripts/lib.mjs",
+          "line": 4,
+          "description": "readJson 的真实文件读取与解析逻辑。"
+        }
+      ]
+    },
+    {
+      "id": "embed-data",
+      "revision": 3,
+      "title": "把数据注入 HTML",
+      "summary": "模型对象 + 模板文件 + 已有批注 → index.html",
+      "dependsOn": [
+        "parse-model"
+      ],
+      "input": {
+        "description": "主输入是上一步的模型对象；另需 HTML 模板和已有批注文件。",
+        "artifactIds": [
+          "parsed-model",
+          "template-file",
+          "feedback-file"
+        ]
+      },
+      "process": {
+        "description": "把对象序列化为 JSON，将小于号编码为 Unicode 转义，再用单次匹配填充两个模板标记；生成 UTF-8 index.html。",
+        "code": "const html = renderDocument(template, model, feedback);\n// 单次匹配模板标记，分别填入 safeJson(model / feedback)\nwriteAtomic(p.html, html);",
+        "rules": [
+          {
+            "id": "literal-data",
+            "text": "模型和批注作为数据写入脚本块；用户文本不能提前结束该脚本块。",
+            "state": "observed"
+          },
+          {
+            "id": "single-pass",
+            "text": "只匹配原模板中的标记一次；数据样例里恰好出现相同文字时，不再二次替换。",
+            "state": "observed"
+          }
+        ],
+        "mappings": [
+          {
+            "from": "model 对象",
+            "operation": "JSON.stringify + 转义 \u003c",
+            "to": "#ipo-model.textContent"
+          },
+          {
+            "from": "feedback.comments[]",
+            "operation": "相同序列化与转义",
+            "to": "#ipo-feedback.textContent"
+          },
+          {
+            "from": "review.html 两个占位标记",
+            "operation": "单次匹配并填充",
+            "to": "index.html 中两个 JSON 数据块"
+          }
+        ],
+        "errors": [
+          "模板标记缺失或重复：报错，不生成不完整页面。"
+        ]
+      },
+      "output": {
+        "description": "磁盘上的 HTML 已包含全部模型与批注；此时数据还未转换成浏览器 DOM。",
+        "artifactIds": [
+          "embedded-html"
+        ]
+      },
+      "trace": [
+        {
+          "id": "escape-json",
+          "label": "可能含 HTML 片段的字符串 → 安全的 JSON 文本",
+          "before": {
+            "text": "\u003c/script>"
+          },
+          "operation": "JSON.stringify 后把 \u003c 替换为字面量 \\u003c，JSON.parse 可以还原原文。",
+          "after": "{\n  \"text\": \"\\u003c/script>\"\n}"
+        },
+        {
+          "id": "replace-markers",
+          "label": "模板标记 → 具体数据",
+          "before": "\u003cscript id=\"ipo-model\" type=\"application/json\">/*__IPO_MODEL__*/\u003c/script>",
+          "operation": "用完整 model JSON 替换标记；以下节选 title 字段。",
+          "after": "#ipo-model 内的字段：\n\"title\": \"从 IPO 文件生成可批注页面\""
+        }
+      ],
+      "questions": [],
+      "evidence": [
+        {
+          "path": "skills/ipo-dev/scripts/render.mjs",
+          "line": 1,
+          "description": "从对象、模板与批注生成实际 index.html。"
+        }
+      ]
+    },
+    {
+      "id": "render-dom",
+      "revision": 3,
+      "title": "渲染步骤内容",
+      "summary": "HTML 中的 JSON 数据 → 标题、数据预览、变换步骤和批注位置",
+      "dependsOn": [
+        "embed-data"
+      ],
+      "input": {
+        "description": "浏览器读取已生成 HTML 的两个 JSON 数据块。模板已在上一步使用，不是此步额外读取的文件。",
+        "artifactIds": [
+          "embedded-html"
+        ]
+      },
+      "process": {
+        "description": "解析模型后按 nodes 遍历；用 artifactIds 找到同一份数据对象，展示其来源、字段和样例；把 trace 渲染为变化前、操作、变化后。",
+        "code": "const model = JSON.parse(document.getElementById('ipo-model').textContent);\nconst inputData = node.input.artifactIds.map(id => artifacts.get(id));\n// node.id → section ID；node.title → h2；inputData → 数据预览",
+        "rules": [
+          {
+            "id": "shared-artifact",
+            "text": "上一步输出与下一步输入引用相同 artifact ID，字段和值保持同源。",
+            "state": "observed"
+          },
+          {
+            "id": "safe-display",
+            "text": "数据内容按文本转义展示，不执行样例里的 HTML 或脚本。",
+            "state": "observed"
+          }
+        ],
+        "mappings": [
+          {
+            "from": "nodes[i].id = render-dom",
+            "operation": "添加 step- 前缀",
+            "to": "section#step-render-dom"
+          },
+          {
+            "from": "nodes[i].title = 渲染步骤内容",
+            "operation": "作为文本显示",
+            "to": "该步骤的 h2"
+          },
+          {
+            "from": "input.artifactIds = [embedded-html]",
+            "operation": "按 ID 查询 artifacts",
+            "to": "输入区的 HTML 文件预览"
+          }
+        ],
+        "errors": [
+          "数据样例长时可滚动预览；完整结构仍保留在嵌入模型中。"
+        ]
+      },
+      "output": {
+        "description": "用户实际看到并可以在具体位置批注的页面元素。",
+        "artifactIds": [
+          "step-dom"
+        ]
+      },
+      "trace": [
+        {
+          "id": "resolve-input",
+          "label": "数据 ID → 实际文件内容预览",
+          "before": {
+            "artifactIds": [
+              "embedded-html"
+            ]
+          },
+          "operation": "artifacts.get('embedded-html')，读取 location、fields 和 example。",
+          "after": {
+            "location": "index.html → #ipo-model / #ipo-feedback",
+            "fields": [
+              "#ipo-model.textContent",
+              "#ipo-feedback.textContent"
+            ],
+            "显示方式": "HTML 文本预览"
+          }
+        },
+        {
+          "id": "map-title",
+          "label": "节点字段 → 页面中的标题与定位",
+          "before": {
+            "id": "render-dom",
+            "title": "渲染步骤内容"
+          },
+          "operation": "ID 加前缀用作页面锚点；title 经过文本转义放入 h2。",
+          "after": "section#step-render-dom\n  h2 → 渲染步骤内容"
+        }
+      ],
+      "questions": [],
+      "evidence": [
+        {
+          "path": "skills/ipo-dev/assets/review.html",
+          "line": 1,
+          "description": "实际模型解析、数据对象预览与 DOM 渲染。"
+        }
+      ]
+    },
+    {
+      "id": "save-note",
+      "revision": 3,
+      "title": "将批注写回文件",
+      "summary": "页面上的定位 + 批注请求 → feedback.json 与带批注的 index.html",
+      "dependsOn": [
+        "render-dom",
+        "embed-data"
+      ],
+      "input": {
+        "description": "批注携带所在 DOM 位置的 nodeId 与 field；服务保存时还使用原 HTML 与已有反馈。请求内容是交互样例。",
+        "artifactIds": [
+          "step-dom",
+          "note-request",
+          "embedded-html",
+          "feedback-file"
+        ]
+      },
+      "process": {
+        "description": "校验保存版本与定位，追加保留原文的批注；反馈版本 +1，写 feedback.json；把同一反馈序列化后替换 HTML 的 ipo-feedback 数据块。",
+        "code": "feedback.version = previous.version + 1;\nconst updatedHtml = embedFeedback(html, feedback);\nwriteAtomic(p.feedback, JSON.stringify(feedback, null, 2));\nwriteAtomic(p.html, updatedHtml);",
+        "rules": [
+          {
+            "id": "keep-anchor",
+            "text": "保留 nodeId、field、body；agent 用这些字段定位所需修改的数据或规则。",
+            "state": "observed"
+          },
+          {
+            "id": "preserve-notes",
+            "text": "保存与重新生成均保留原有批注；旧位置不存在时仍展示原文。",
+            "state": "observed"
+          }
+        ],
+        "mappings": [
+          {
+            "from": "DOM 的 data-node / data-field",
+            "operation": "写入批注定位",
+            "to": "comments[].nodeId / field"
+          },
+          {
+            "from": "textarea 的文字",
+            "operation": "原文保存",
+            "to": "comments[].body"
+          },
+          {
+            "from": "完整 feedback 对象",
+            "operation": "序列化并写两个文件",
+            "to": "feedback.json 与 HTML 的 #ipo-feedback"
+          }
+        ],
+        "errors": [
+          "版本冲突：保留浏览器草稿，提示导出后核对；不会用旧内容覆盖新文件。",
+          "直接打开 HTML 文件时，需保存带批注的 HTML 副本。"
+        ]
+      },
+      "output": {
+        "description": "两处保存同一份批注；agent 解析 HTML 数据块即可读回，用户刷新页面也能看到。",
+        "artifactIds": [
+          "saved-notes",
+          "annotated-html"
+        ]
+      },
+      "trace": [
+        {
+          "id": "bind-note",
+          "label": "输入框文字 → 有定位信息的记录（交互样例）",
+          "before": {
+            "data-node": "render-dom",
+            "data-field": "artifact:embedded-html",
+            "textarea": "把这个 HTML 的两个 JSON 数据块都展开显示。"
+          },
+          "operation": "生成 ID 与时间戳，使用所在位置的 nodeId/field，body 保持原文。",
+          "after": {
+            "nodeId": "render-dom",
+            "field": "artifact:embedded-html",
+            "body": "把这个 HTML 的两个 JSON 数据块都展开显示。"
+          }
+        },
+        {
+          "id": "persist-feedback",
+          "label": "反馈对象 → JSON 文件与 HTML 数据块（交互样例）",
+          "before": {
+            "version": 0,
+            "comments": []
+          },
+          "operation": "追加该记录并递增版本；两份文件使用同一 feedback。",
+          "after": {
+            "version": 1,
+            "comments": [
+              {
+                "nodeId": "render-dom",
+                "field": "artifact:embedded-html",
+                "body": "把这个 HTML 的两个 JSON 数据块都展开显示。"
+              }
+            ]
+          }
+        }
+      ],
+      "questions": [],
+      "evidence": [
+        {
+          "path": "skills/ipo-dev/scripts/serve.mjs",
+          "line": 1,
+          "description": "保存请求的校验与两个文件的实际写入。"
+        }
+      ]
+    }
+  ]
+}</script>
+<script id="ipo-feedback" type="application/json">{
+  "schemaVersion": 1,
+  "projectId": "ipo-dev",
+  "projectRevision": 3,
+  "version": 1,
+  "comments": []
+}</script>
+<script>
+(() => {
+'use strict';
+const $=id=>document.getElementById(id);
+const model=JSON.parse($('ipo-model').textContent);
+const artifacts=new Map(model.artifacts.map(a=>[a.id,a]));
+let feedback=JSON.parse($('ipo-feedback').textContent),token=null,connected=false,dirty=false,saving=false,ready=false,edits=0;
+const openForms=new Set(),drafts=new Map();
+const storageKey=`ipo-notes:${model.id}:${model.revision}:${location.origin}`;
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pretty=x=>typeof x==='string'?x:JSON.stringify(x,null,2);
+const safeJson=x=>JSON.stringify(x,null,2).replace(/</g,'\\u003c');
+const key=(id,field)=>`${id}/${field}`;
+function status(text,error=false){$('save-status').textContent=text;$('save-status').classList.toggle('error',error);}
+function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').hidden=true,3000);}
+function stash(){try{localStorage.setItem(storageKey,JSON.stringify({feedback,dirty,drafts:[...drafts]}));}catch{status('浏览器草稿不可用，请保存 HTML 副本',true);}}
+function noteMarkup(c){return `<div class="note"><div class="note-label">备注</div>${esc(c.body)}${c.agentReply?`<div class="reply"><div class="note-label">Agent 修改说明</div>${esc(c.agentReply)}</div>`:''}</div>`;}
+function annotation(n,field){const k=key(n.id,field);return `<div class="annotation" data-node="${esc(n.id)}" data-field="${esc(field)}">${feedback.comments.filter(c=>c.nodeId===n.id&&c.field===field).map(noteMarkup).join('')}<button class="add-note" data-add-note>添加备注</button><form class="note-form" ${openForms.has(k)?'':'hidden'}><textarea aria-label="备注内容" maxlength="10000" placeholder="在这里写你的问题或修改意见…">${esc(drafts.get(k)||'')}</textarea><div class="note-actions"><button type="button" data-cancel>取消</button><button class="button primary" type="submit">保存备注</button></div></form></div>`;}
+function stepLink(id,label){return `<a href="#step-${esc(id)}">${esc(label||model.nodes.find(n=>n.id===id)?.title||id)}</a>`;}
+function artifactPreview(n,id){
+ const a=artifacts.get(id),consumers=model.nodes.filter(x=>x.input.artifactIds.includes(id)&&x.id!==n.id);
+ const kinds={file:'FILE',data:'OBJECT',html:'HTML',dom:'DOM',request:'HTTP'};
+ return `<div class="artifact-preview" data-artifact="${esc(id)}"><div class="artifact-header"><span class="artifact-kind">${kinds[a.kind]}</span>${esc(a.name)}</div><div class="artifact-location"><strong>位置 / 来源</strong><br>${esc(a.location)}</div><div class="artifact-format">${esc(a.format)} <span class="mono">· ${esc(a.id)}</span></div><table class="field-table"><thead><tr><th>字段</th><th>类型</th><th>含义</th></tr></thead><tbody>${a.fields.map(f=>`<tr><td>${esc(f.path)}</td><td>${esc(f.type)}</td><td>${esc(f.meaning)}</td></tr>`).join('')}</tbody></table><span class="sample-label ${a.sampleKind}">${{actual:'实际内容',excerpt:'来源内容节选',illustrative:'交互 / 设计样例'}[a.sampleKind]}</span><pre class="data">${esc(pretty(a.example))}</pre><div class="artifact-links">${a.producedBy?'由 '+stepLink(a.producedBy)+' 产生':'外部输入'}${consumers.length?'<br>同一数据还用于：'+consumers.map(x=>stepLink(x.id)).join('、'):''}</div>${annotation(n,'artifact:'+id)}</div>`;
+}
+function card(n,type,label,letter){const v=n[type];return `<section class="card ${type}" data-section="${esc(n.id+'/'+type)}"><div class="card-head"><span class="letter">${letter}</span><h3>${label}</h3></div><p class="description">${esc(v.description)}</p>${type==='process'?`${v.code?`<pre class="process-code">${esc(v.code)}</pre>`:''}<div class="rules">${v.rules.map(r=>`<div class="rule ${r.state==='unresolved'?'unresolved':''}">${esc(r.text)}${annotation(n,'rule:'+r.id)}</div>`).join('')}</div>`:v.artifactIds.map(id=>artifactPreview(n,id)).join('')}${annotation(n,type)}</section>`;}
+function mappings(n){return n.process.mappings?.length?`<div class="mapping-title">具体字段怎样映射</div><table class="mapping-table"><thead><tr><th>输入字段 / 内容</th><th>处理操作</th><th>输出字段 / 内容</th></tr></thead><tbody>${n.process.mappings.map(x=>`<tr><td>${esc(x.from)}</td><td>${esc(x.operation)}</td><td>${esc(x.to)}</td></tr>`).join('')}</tbody></table>`:'';}
+function render(){
+ const scrollY=window.scrollY;
+ $('title').textContent=model.title;$('subtitle').textContent=model.subtitle;$('scope').textContent=model.scope;
+ $('steps').innerHTML=model.nodes.map((n,i)=>`<a class="step-link" href="#step-${esc(n.id)}"><span class="number">${String(i+1).padStart(2,'0')}</span><span>${esc(n.title)}</span></a>`).join('');
+ $('dataflow').innerHTML=model.flow.map((id,i)=>{const a=artifacts.get(id),target=a.producedBy||model.nodes.find(n=>n.input.artifactIds.includes(id))?.id;return `${i?'<span class="flow-arrow">→</span>':''}<a class="flow-item" href="#step-${esc(target)}" data-flow-artifact="${esc(id)}"><span class="flow-letter">${String.fromCharCode(65+i)}</span><span class="flow-name">${esc(a.name)}</span><div class="flow-format">${esc(a.format)}</div></a>`;}).join('');
+ $('content').innerHTML=model.nodes.map((n,i)=>`<section class="step" id="step-${esc(n.id)}"><div class="step-heading"><span class="number">${String(i+1).padStart(2,'0')}</span><h2>${esc(n.title)}</h2></div><p class="summary">${esc(n.summary)}</p><div class="ipo">${card(n,'input','输入','I')}${card(n,'process','处理','P')}${card(n,'output','输出','O')}</div>${mappings(n)}<div class="trace-title">中间是怎样变化的</div>${n.trace.map((t,j)=>`<section class="trace"><div class="trace-label">${j+1}. ${esc(t.label)}</div><div class="trace-columns"><div class="trace-part"><span class="label">变化前</span><pre>${esc(pretty(t.before))}</pre></div><div class="trace-part"><span class="label">怎样处理 →</span><p class="operation">${esc(t.operation)}</p></div><div class="trace-part"><span class="label">变化后</span><pre>${esc(pretty(t.after))}</pre></div></div>${annotation(n,'trace:'+t.id)}</section>`).join('')}${n.questions.map(q=>`<div class="question"><p>待问清楚：${esc(q.text)}</p><small>影响：${esc(q.impact)}</small>${annotation(n,'question:'+q.id)}</div>`).join('')}${n.process.errors.length?`<div class="boundary">遇到问题时：<ul>${n.process.errors.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}</section>`).join('');
+ const valid=new Set([...document.querySelectorAll('.annotation')].map(el=>key(el.dataset.node,el.dataset.field)));
+ const orphaned=feedback.comments.filter(c=>!valid.has(key(c.nodeId,c.field)));
+ $('orphaned').innerHTML=orphaned.length?`<section class="orphaned"><h2>原位置已变更的备注</h2><p>保留此前页面的意见，供 agent 核对。</p>${orphaned.map(c=>`<div><code>${esc(c.nodeId)} / ${esc(c.field)}</code>${noteMarkup(c)}</div>`).join('')}</section>`:'';
+ window.scrollTo({top:scrollY,behavior:'instant'});
+}
+async function save(){
+ if(!connected||saving||!dirty)return;
+ saving=true;const attempt=edits;status('正在保存备注…');$('retry-save').hidden=true;
+ try{const response=await fetch('/api/feedback',{method:'PUT',headers:{'Content-Type':'application/json','x-ipo-token':token},body:JSON.stringify({baseVersion:feedback.version,feedback:structuredClone(feedback)})});const result=await response.json();if(!response.ok)throw Error(result.error||'保存失败');feedback.version=result.version;if(attempt===edits)dirty=false;stash();status(dirty?'正在保存备注…':'备注已写入 HTML');}
+ catch(error){status('未写入文件，请重试或保存 HTML 副本',true);$('retry-save').hidden=false;toast(error.message);}
+ finally{saving=false;if(dirty&&edits!==attempt)save();}
+}
+document.addEventListener('click',event=>{
+ const add=event.target.closest('[data-add-note]'),cancel=event.target.closest('[data-cancel]');
+ if(add){const wrapper=add.closest('.annotation');openForms.add(key(wrapper.dataset.node,wrapper.dataset.field));wrapper.querySelector('form').hidden=false;wrapper.querySelector('textarea').focus();}
+ if(cancel){const wrapper=cancel.closest('.annotation'),k=key(wrapper.dataset.node,wrapper.dataset.field);openForms.delete(k);drafts.delete(k);wrapper.querySelector('textarea').value='';wrapper.querySelector('form').hidden=true;stash();}
+});
+document.addEventListener('input',event=>{if(event.target.matches('.note-form textarea')){const wrapper=event.target.closest('.annotation');drafts.set(key(wrapper.dataset.node,wrapper.dataset.field),event.target.value);stash();}});
+document.addEventListener('submit',event=>{
+ if(!event.target.matches('.note-form'))return;event.preventDefault();if(!ready){toast('正在读取原有备注，请稍候');return;}
+ const wrapper=event.target.closest('.annotation'),body=wrapper.querySelector('textarea').value.trim();if(!body){toast('请先填写备注');return;}
+ const k=key(wrapper.dataset.node,wrapper.dataset.field);
+ feedback.comments.push({id:crypto.randomUUID(),nodeId:wrapper.dataset.node,field:wrapper.dataset.field,body,createdAt:new Date().toISOString(),agentReply:''});
+ drafts.delete(k);openForms.delete(k);dirty=true;edits++;stash();render();if(connected)save();else{status('备注在浏览器中，请保存 HTML 副本',true);toast('备注已添加，请保存 HTML 副本交给 agent');}
+});
+$('retry-save').onclick=save;
+$('save-html').onclick=()=>{
+ const clone=document.documentElement.cloneNode(true);clone.querySelector('#ipo-model').textContent=safeJson(model);clone.querySelector('#ipo-feedback').textContent=safeJson(feedback);clone.querySelectorAll('.note-form').forEach(form=>{form.hidden=true;form.querySelector('textarea').textContent='';});
+ const url=URL.createObjectURL(new Blob(['<!doctype html>\n'+clone.outerHTML],{type:'text/html;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=`${model.id}.html`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('HTML 副本已包含当前备注');
+};
+window.addEventListener('beforeunload',event=>{if(dirty||[...drafts.values()].some(x=>x.trim())){event.preventDefault();event.returnValue='';}});
+render();
+async function init(){
+ let local;try{local=JSON.parse(localStorage.getItem(storageKey)||'null');}catch{}
+ if(location.protocol==='http:'||location.protocol==='https:')try{const response=await fetch('/api/state',{signal:AbortSignal.timeout(3500)});if(!response.ok)throw Error();const state=await response.json();if(state.projectId!==model.id||state.projectRevision!==model.revision)throw Error();feedback=state.feedback;token=state.token;connected=true;}catch{}
+ if(local?.feedback?.projectId===model.id){for(const [k,v] of local.drafts||[])drafts.set(k,v);if(local.dirty){const known=new Set(feedback.comments.map(c=>c.id));for(const c of local.feedback.comments)if(!known.has(c.id)){feedback.comments.push(c);dirty=true;}}}
+ status(connected?'备注将保存到本页 HTML':'离线页面 · 添加备注后请保存 HTML 副本',!connected);ready=true;render();if(dirty&&connected)save();
+}
+init();
+})();
+</script>
+</body>
+</html>

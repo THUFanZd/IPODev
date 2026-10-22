@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+const url=process.argv[2];if(!url)throw Error('Pass a running test-only IPODev URL');
+const state=await(await fetch(url+'/api/state')).json(),feedback=structuredClone(state.feedback);
+const note={id:crypto.randomUUID(),nodeId:'render-dom',field:'artifact:embedded-html',body:'【测试批注】把此数据对象名称改为“生成的 HTML 数据块”。',createdAt:new Date().toISOString(),agentReply:''};feedback.comments.push(note);
+const request={baseVersion:state.feedback.version,feedback};
+const put=()=>fetch(url+'/api/feedback',{method:'PUT',headers:{'Content-Type':'application/json','x-ipo-token':state.token},body:JSON.stringify(request)});
+assert.equal((await put()).status,200);
+const html=await(await fetch(url+'/')).text();const embedded=JSON.parse(html.match(/<script id="ipo-feedback" type="application\/json">([\s\S]*?)<\/script>/)[1]);
+assert.deepEqual(embedded.comments.find(c=>c.id===note.id),note);
+const reread=await(await fetch(url+'/api/state')).json();assert.deepEqual(reread.feedback.comments.find(c=>c.id===note.id),note);
+assert.equal((await put()).status,409);
+console.log('Verified: saved notes are in both the page HTML and feedback JSON; stale overwrite rejected.');

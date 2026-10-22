@@ -1,0 +1,18 @@
+# Local dependencies and environment settings
+node_modules/
+.env
+.env.*
+!.env.example
+
+# Local annotations and task-specific generated previews
+# Keep the repository's root project.json and index.html as the demo.
+/feedback.json
+/ipo-preview/
+
+# Temporary files and logs
+*.tmp
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db

@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 2,
+  "id": "ipo-dev",
+  "revision": 3,
+  "title": "从 IPO 文件生成可批注页面",
+  "subtitle": "project.json 的文件内容，怎样变成浏览器中的步骤，以及批注怎样写回 HTML。",
+  "mode": "review",
+  "goal": "把结构化 IPO 模型与模板转换为可阅读、可批注的 HTML，并将批注持久化到同一 HTML。",
+  "scope": "文件与代码节选取自本项目。写入批注的请求和结果使用标明的交互样例；它们不代表已有用户批注。",
+  "flow": ["model-file", "parsed-model", "embedded-html", "step-dom", "annotated-html"],
+  "artifacts": [
+    {
+      "id": "model-file", "name": "project.json", "kind": "file", "location": "project.json", "format": "UTF-8 JSON 文本", "sampleKind": "excerpt",
+      "fields": [{"path": "title", "type": "string", "meaning": "页面显示的功能名称"}, {"path": "artifacts[]", "type": "Artifact[]", "meaning": "文件、数据对象、字段和样例"}, {"path": "nodes[].input.artifactIds", "type": "string[]", "meaning": "每一步消费的数据对象 ID"}, {"path": "nodes[].output.artifactIds", "type": "string[]", "meaning": "每一步产生的数据对象 ID"}],
+      "example": "{\n  \"schemaVersion\": 2,\n  \"id\": \"ipo-dev\",\n  \"title\": \"从 IPO 文件生成可批注页面\",\n  \"nodes\": [\n    {\"id\": \"render-dom\", \"title\": \"渲染步骤内容\",\n     \"input\": {\"artifactIds\": [\"embedded-html\"]}}\n  ]\n}"
+    },
+    {
+      "id": "parsed-model", "name": "内存中的模型对象", "kind": "data", "location": "render.mjs → model 变量", "format": "JavaScript Object", "sampleKind": "excerpt", "producedBy": "parse-model",
+      "fields": [{"path": "model.title", "type": "string", "meaning": "与文件中的 title 保持一致"}, {"path": "model.nodes", "type": "Node[4]", "meaning": "4 个实际数据处理步骤"}, {"path": "model.artifacts", "type": "Artifact[]", "meaning": "按 ID 可查到字段与具体内容"}],
+      "example": {"title": "从 IPO 文件生成可批注页面", "nodes": [{"id": "render-dom", "title": "渲染步骤内容", "input": {"artifactIds": ["embedded-html"]}}]}
+    },
+    {
+      "id": "template-file", "name": "review.html 模板", "kind": "file", "location": "skills/ipo-dev/assets/review.html", "format": "HTML + 内联 CSS / JavaScript", "sampleKind": "excerpt",
+      "fields": [{"path": "ipo-model 脚本块", "type": "JSON 占位位置", "meaning": "填入完整模型"}, {"path": "ipo-feedback 脚本块", "type": "JSON 占位位置", "meaning": "填入原有批注"}, {"path": "render()", "type": "JavaScript function", "meaning": "把模型显示成具体页面"}],
+      "example": "<script id=\"ipo-model\" type=\"application/json\">/*__IPO_MODEL__*/</script>\n<script id=\"ipo-feedback\" type=\"application/json\">/*__IPO_FEEDBACK__*/</script>"
+    },
+    {
+      "id": "feedback-file", "name": "已有批注文件", "kind": "file", "location": "feedback.json", "format": "UTF-8 JSON", "sampleKind": "excerpt",
+      "fields": [{"path": "projectId", "type": "string", "meaning": "批注所属项目"}, {"path": "version", "type": "integer", "meaning": "防止旧窗口覆盖新内容"}, {"path": "comments[]", "type": "Comment[]", "meaning": "已有批注；初始可以为空"}],
+      "example": {"projectId": "ipo-dev", "comments": []}
+    },
+    {
+      "id": "embedded-html", "name": "生成的 HTML 数据块", "kind": "html", "location": "index.html → #ipo-model / #ipo-feedback", "format": "HTML 文件", "sampleKind": "excerpt", "producedBy": "embed-data",
+      "fields": [{"path": "#ipo-model.textContent", "type": "JSON string", "meaning": "完整 IPO 模型"}, {"path": "#ipo-feedback.textContent", "type": "JSON string", "meaning": "可供 agent 读取的批注"}],
+      "example": "<script id=\"ipo-model\" type=\"application/json\">{\n  \"schemaVersion\": 2,\n  \"id\": \"ipo-dev\",\n  \"revision\": 3,\n  \"title\": \"从 IPO 文件生成可批注页面\","
+    },
+    {
+      "id": "step-dom", "name": "浏览器中的步骤元素", "kind": "dom", "location": "index.html → #step-render-dom", "format": "DOM 元素", "sampleKind": "excerpt", "producedBy": "render-dom",
+      "fields": [{"path": "section.id", "type": "string", "meaning": "由节点 ID 生成导航位置"}, {"path": "h2.textContent", "type": "string", "meaning": "步骤标题"}, {"path": ".artifact-preview", "type": "DOM element", "meaning": "输入/输出数据的来源、字段和内容"}, {"path": ".annotation[data-field]", "type": "DOM element", "meaning": "批注绑定到具体数据或变换"}],
+      "example": "<section class=\"step\" id=\"step-render-dom\">\n  …\n  <h2>渲染步骤内容</h2>\n  …\n  <div class=\"artifact-preview\" data-artifact=\"embedded-html\">\n    …具体文件、字段与内容…\n  </div>\n</section>"
+    },
+    {
+      "id": "note-request", "name": "保存一条批注的请求", "kind": "request", "location": "PUT /api/feedback", "format": "HTTP JSON body", "sampleKind": "illustrative",
+      "fields": [{"path": "baseVersion", "type": "integer", "meaning": "当前已读取的反馈版本"}, {"path": "feedback.comments[].nodeId", "type": "string", "meaning": "批注对应步骤"}, {"path": "feedback.comments[].field", "type": "string", "meaning": "对应输入、数据对象或处理规则"}, {"path": "feedback.comments[].body", "type": "string", "meaning": "用户写下的原文"}],
+      "example": {"baseVersion": 0, "feedback": {"schemaVersion": 1, "projectId": "ipo-dev", "projectRevision": 3, "version": 0, "comments": [{"id": "note-01", "nodeId": "render-dom", "field": "artifact:embedded-html", "body": "把这个 HTML 的两个 JSON 数据块都展开显示。", "createdAt": "2026-10-19T08:00:00Z", "agentReply": ""}]}}
+    },
+    {
+      "id": "saved-notes", "name": "持久化的批注数据", "kind": "file", "location": "feedback.json → comments[]", "format": "JSON", "sampleKind": "illustrative", "producedBy": "save-note",
+      "fields": [{"path": "version", "type": "integer", "meaning": "每次成功保存后 +1"}, {"path": "comments[].nodeId / field", "type": "string", "meaning": "保留批注的定位信息"}, {"path": "comments[].body", "type": "string", "meaning": "保持用户原文"}],
+      "example": {"version": 1, "comments": [{"id": "note-01", "nodeId": "render-dom", "field": "artifact:embedded-html", "body": "把这个 HTML 的两个 JSON 数据块都展开显示。"}]}
+    },
+    {
+      "id": "annotated-html", "name": "带批注的 HTML 文件", "kind": "html", "location": "index.html → #ipo-feedback", "format": "可由浏览器或 agent 读取的 HTML", "sampleKind": "illustrative", "producedBy": "save-note",
+      "fields": [{"path": "#ipo-model", "type": "JSON data block", "meaning": "保留原 IPO 描述"}, {"path": "#ipo-feedback.comments[]", "type": "JSON data block", "meaning": "包含刚保存的批注"}, {"path": "页面中的原位置", "type": "DOM element", "meaning": "刷新后由该 JSON 重新显示批注"}],
+      "example": "<script id=\"ipo-feedback\" type=\"application/json\">{\n  …\n  \"comments\": [{\n    \"nodeId\": \"render-dom\",\n    \"field\": \"artifact:embedded-html\",\n    \"body\": \"把这个 HTML 的两个 JSON 数据块都展开显示。\"\n  }]\n}</script>"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "parse-model", "revision": 3, "title": "解析模型文件", "summary": "project.json 文本 → 可按字段访问的 JavaScript 对象", "dependsOn": [],
+      "input": {"description": "读取磁盘上的模型文件内容。", "artifactIds": ["model-file"]},
+      "process": {"description": "以 UTF-8 读取文件，移除可能存在的 BOM，再调用 JSON.parse；校验节点、数据对象引用及其依赖。", "code": "const text = fs.readFileSync(file, 'utf8').replace(/^\\uFEFF/, '');\nconst model = JSON.parse(text);\nvalidateModel(model);", "rules": [{"id": "preserve-fields", "text": "解析保留完整模型；下方只节选同一字段来展示文本与对象之间的变化。", "state": "observed"}], "mappings": [{"from": "JSON 中的 title 字符串", "operation": "JSON.parse，值不变", "to": "model.title"}, {"from": "nodes 数组", "operation": "解析数组与嵌套对象", "to": "model.nodes[]"}, {"from": "input.artifactIds[]", "operation": "校验 ID 指向已定义的数据对象", "to": "可追踪来源的输入引用"}], "errors": ["非法 JSON：停止生成并报告解析错误。", "数据对象引用不存在或依赖形成循环：报告模型错误。"]},
+      "output": {"description": "供后续模板填充使用的模型对象；不在此处生成页面。", "artifactIds": ["parsed-model"]},
+      "trace": [{"id": "decode", "label": "文件字节 → 文本", "before": "UTF-8 bytes: 7B 0A 20 20 22 73 63 68 65 6D 61 …", "operation": "readFileSync(file, 'utf8')，若开头有 BOM 则移除。", "after": "{\n  \"schemaVersion\": 2,\n  \"id\": \"ipo-dev\",\n  …\n}"}, {"id": "parse-fields", "label": "同一字段：JSON 文本 → 对象属性", "before": "\"title\": \"从 IPO 文件生成可批注页面\"", "operation": "JSON.parse 后读取 model.title；其余模型字段也完整保留。", "after": {"model.title": "从 IPO 文件生成可批注页面", "typeof model": "object", "model.nodes.length": 4}}],
+      "questions": [], "evidence": [{"path": "skills/ipo-dev/scripts/lib.mjs", "line": 4, "description": "readJson 的真实文件读取与解析逻辑。"}]
+    },
+    {
+      "id": "embed-data", "revision": 3, "title": "把数据注入 HTML", "summary": "模型对象 + 模板文件 + 已有批注 → index.html", "dependsOn": ["parse-model"],
+      "input": {"description": "主输入是上一步的模型对象；另需 HTML 模板和已有批注文件。", "artifactIds": ["parsed-model", "template-file", "feedback-file"]},
+      "process": {"description": "把对象序列化为 JSON，将小于号编码为 Unicode 转义，再用单次匹配填充两个模板标记；生成 UTF-8 index.html。", "code": "const html = renderDocument(template, model, feedback);\n// 单次匹配模板标记，分别填入 safeJson(model / feedback)\nwriteAtomic(p.html, html);", "rules": [{"id": "literal-data", "text": "模型和批注作为数据写入脚本块；用户文本不能提前结束该脚本块。", "state": "observed"}, {"id": "single-pass", "text": "只匹配原模板中的标记一次；数据样例里恰好出现相同文字时，不再二次替换。", "state": "observed"}], "mappings": [{"from": "model 对象", "operation": "JSON.stringify + 转义 <", "to": "#ipo-model.textContent"}, {"from": "feedback.comments[]", "operation": "相同序列化与转义", "to": "#ipo-feedback.textContent"}, {"from": "review.html 两个占位标记", "operation": "单次匹配并填充", "to": "index.html 中两个 JSON 数据块"}], "errors": ["模板标记缺失或重复：报错，不生成不完整页面。"]},
+      "output": {"description": "磁盘上的 HTML 已包含全部模型与批注；此时数据还未转换成浏览器 DOM。", "artifactIds": ["embedded-html"]},
+      "trace": [{"id": "escape-json", "label": "可能含 HTML 片段的字符串 → 安全的 JSON 文本", "before": {"text": "</script>"}, "operation": "JSON.stringify 后把 < 替换为字面量 \\u003c，JSON.parse 可以还原原文。", "after": "{\n  \"text\": \"\\u003c/script>\"\n}"}, {"id": "replace-markers", "label": "模板标记 → 具体数据", "before": "<script id=\"ipo-model\" type=\"application/json\">/*__IPO_MODEL__*/</script>", "operation": "用完整 model JSON 替换标记；以下节选 title 字段。", "after": "#ipo-model 内的字段：\n\"title\": \"从 IPO 文件生成可批注页面\""}],
+      "questions": [], "evidence": [{"path": "skills/ipo-dev/scripts/render.mjs", "line": 1, "description": "从对象、模板与批注生成实际 index.html。"}]
+    },
+    {
+      "id": "render-dom", "revision": 3, "title": "渲染步骤内容", "summary": "HTML 中的 JSON 数据 → 标题、数据预览、变换步骤和批注位置", "dependsOn": ["embed-data"],
+      "input": {"description": "浏览器读取已生成 HTML 的两个 JSON 数据块。模板已在上一步使用，不是此步额外读取的文件。", "artifactIds": ["embedded-html"]},
+      "process": {"description": "解析模型后按 nodes 遍历；用 artifactIds 找到同一份数据对象，展示其来源、字段和样例；把 trace 渲染为变化前、操作、变化后。", "code": "const model = JSON.parse(document.getElementById('ipo-model').textContent);\nconst inputData = node.input.artifactIds.map(id => artifacts.get(id));\n// node.id → section ID；node.title → h2；inputData → 数据预览", "rules": [{"id": "shared-artifact", "text": "上一步输出与下一步输入引用相同 artifact ID，字段和值保持同源。", "state": "observed"}, {"id": "safe-display", "text": "数据内容按文本转义展示，不执行样例里的 HTML 或脚本。", "state": "observed"}], "mappings": [{"from": "nodes[i].id = render-dom", "operation": "添加 step- 前缀", "to": "section#step-render-dom"}, {"from": "nodes[i].title = 渲染步骤内容", "operation": "作为文本显示", "to": "该步骤的 h2"}, {"from": "input.artifactIds = [embedded-html]", "operation": "按 ID 查询 artifacts", "to": "输入区的 HTML 文件预览"}], "errors": ["数据样例长时可滚动预览；完整结构仍保留在嵌入模型中。"]},
+      "output": {"description": "用户实际看到并可以在具体位置批注的页面元素。", "artifactIds": ["step-dom"]},
+      "trace": [{"id": "resolve-input", "label": "数据 ID → 实际文件内容预览", "before": {"artifactIds": ["embedded-html"]}, "operation": "artifacts.get('embedded-html')，读取 location、fields 和 example。", "after": {"location": "index.html → #ipo-model / #ipo-feedback", "fields": ["#ipo-model.textContent", "#ipo-feedback.textContent"], "显示方式": "HTML 文本预览"}}, {"id": "map-title", "label": "节点字段 → 页面中的标题与定位", "before": {"id": "render-dom", "title": "渲染步骤内容"}, "operation": "ID 加前缀用作页面锚点；title 经过文本转义放入 h2。", "after": "section#step-render-dom\n  h2 → 渲染步骤内容"}],
+      "questions": [], "evidence": [{"path": "skills/ipo-dev/assets/review.html", "line": 1, "description": "实际模型解析、数据对象预览与 DOM 渲染。"}]
+    },
+    {
+      "id": "save-note", "revision": 3, "title": "将批注写回文件", "summary": "页面上的定位 + 批注请求 → feedback.json 与带批注的 index.html", "dependsOn": ["render-dom", "embed-data"],
+      "input": {"description": "批注携带所在 DOM 位置的 nodeId 与 field；服务保存时还使用原 HTML 与已有反馈。请求内容是交互样例。", "artifactIds": ["step-dom", "note-request", "embedded-html", "feedback-file"]},
+      "process": {"description": "校验保存版本与定位，追加保留原文的批注；反馈版本 +1，写 feedback.json；把同一反馈序列化后替换 HTML 的 ipo-feedback 数据块。", "code": "feedback.version = previous.version + 1;\nconst updatedHtml = embedFeedback(html, feedback);\nwriteAtomic(p.feedback, JSON.stringify(feedback, null, 2));\nwriteAtomic(p.html, updatedHtml);", "rules": [{"id": "keep-anchor", "text": "保留 nodeId、field、body；agent 用这些字段定位所需修改的数据或规则。", "state": "observed"}, {"id": "preserve-notes", "text": "保存与重新生成均保留原有批注；旧位置不存在时仍展示原文。", "state": "observed"}], "mappings": [{"from": "DOM 的 data-node / data-field", "operation": "写入批注定位", "to": "comments[].nodeId / field"}, {"from": "textarea 的文字", "operation": "原文保存", "to": "comments[].body"}, {"from": "完整 feedback 对象", "operation": "序列化并写两个文件", "to": "feedback.json 与 HTML 的 #ipo-feedback"}], "errors": ["版本冲突：保留浏览器草稿，提示导出后核对；不会用旧内容覆盖新文件。", "直接打开 HTML 文件时，需保存带批注的 HTML 副本。"]},
+      "output": {"description": "两处保存同一份批注；agent 解析 HTML 数据块即可读回，用户刷新页面也能看到。", "artifactIds": ["saved-notes", "annotated-html"]},
+      "trace": [{"id": "bind-note", "label": "输入框文字 → 有定位信息的记录（交互样例）", "before": {"data-node": "render-dom", "data-field": "artifact:embedded-html", "textarea": "把这个 HTML 的两个 JSON 数据块都展开显示。"}, "operation": "生成 ID 与时间戳，使用所在位置的 nodeId/field，body 保持原文。", "after": {"nodeId": "render-dom", "field": "artifact:embedded-html", "body": "把这个 HTML 的两个 JSON 数据块都展开显示。"}}, {"id": "persist-feedback", "label": "反馈对象 → JSON 文件与 HTML 数据块（交互样例）", "before": {"version": 0, "comments": []}, "operation": "追加该记录并递增版本；两份文件使用同一 feedback。", "after": {"version": 1, "comments": [{"nodeId": "render-dom", "field": "artifact:embedded-html", "body": "把这个 HTML 的两个 JSON 数据块都展开显示。"}]}}],
+      "questions": [], "evidence": [{"path": "skills/ipo-dev/scripts/serve.mjs", "line": 1, "description": "保存请求的校验与两个文件的实际写入。"}]
+    }
+  ]
+}
