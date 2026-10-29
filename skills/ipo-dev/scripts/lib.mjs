@@ -9,7 +9,16 @@ export function outputDerivations(n){
  if(n.process.derivations?.length)return n.process.derivations;
  return n.output.artifactIds.map(id=>({id:'output-'+id,outputId:id,inputIds:n.output.artifactIds.length===1?[...n.input.artifactIds]:[],steps:[n.process.description],traceIds:n.trace.map(t=>t.id),legacy:true,uncertain:n.output.artifactIds.length>1}));
 }
-export function anchors(n,example){const step=example?.steps.find(s=>s.nodeId===n.id);return new Set(['input','process','output',...(n.input.artifactIds||[]).concat(n.output.artifactIds||[]).map(id=>'artifact:'+id),...n.process.rules.map(x=>'rule:'+x.id),...n.trace.map(x=>'trace:'+x.id),...n.questions.map(x=>'question:'+x.id),...outputDerivations(n).map(x=>'derivation:'+x.id),...(step?[...n.input.artifactIds.concat(n.output.artifactIds).map(id=>'example:artifact:'+id),...step.outputs.flatMap(o=>['example:output:'+o.outputId,...o.changes.map(c=>'example:change:'+c.id)])]:[])]);}
+export function visualAnchors(n,example){return [
+ ...outputDerivations(n).flatMap(d=>(d.visual?.frames||[]).map(f=>`visual:${d.id}:${f.id}`)),
+ ...(example?.steps.find(s=>s.nodeId===n.id)?.outputs||[]).flatMap(o=>(o.visual?.frames||[]).map(f=>`example:visual:${o.outputId}:${f.id}`)),
+];}
+export function anchors(n,example){const step=example?.steps.find(s=>s.nodeId===n.id);return new Set(['input','process','output',...(n.input.artifactIds||[]).concat(n.output.artifactIds||[]).map(id=>'artifact:'+id),...n.process.rules.map(x=>'rule:'+x.id),...n.trace.map(x=>'trace:'+x.id),...n.questions.map(x=>'question:'+x.id),...outputDerivations(n).map(x=>'derivation:'+x.id),...visualAnchors(n,example),...(step?[...n.input.artifactIds.concat(n.output.artifactIds).map(id=>'example:artifact:'+id),...step.outputs.flatMap(o=>['example:output:'+o.outputId,...o.changes.map(c=>'example:change:'+c.id)])]:[])]);}
+export function validateVisual(v){
+ const text=x=>typeof x==='string'&&x.trim().length>0;
+ if(!v||typeof v.css!=='string'||!Array.isArray(v.frames)||!v.frames.length||new Set(v.frames.map(f=>f?.id)).size!==v.frames.length||!v.frames.every(f=>f&&text(f.id)&&text(f.title)&&text(f.caption)&&text(f.html)&&(f.holdMs===undefined||(Number.isFinite(f.holdMs)&&f.holdMs>=1200&&f.holdMs<=30000))))throw Error('Invalid process visual: unique frames with title, caption and HTML required');
+ return v;
+}
 export function validateModel(m){
  const require=(ok,message)=>{if(!ok)throw Error(message);};const text=x=>typeof x==='string'&&x.trim().length>0;
  require(m.schemaVersion===2&&text(m.id)&&Number.isSafeInteger(m.revision)&&m.revision>0,'Invalid model identity (schema v2 required)');
@@ -31,6 +40,7 @@ export function validateModel(m){
   if(n.process.mappings)require(Array.isArray(n.process.mappings)&&n.process.mappings.every(x=>text(x.from)&&text(x.operation)&&text(x.to)),'Invalid field mapping');
   require(n.trace.every(x=>text(x.label)&&text(x.operation)&&Object.hasOwn(x,'before')&&Object.hasOwn(x,'after')),'Incomplete transformation');
   if(n.process.derivations!==undefined){const ds=n.process.derivations;require(Array.isArray(ds)&&ds.length===n.output.artifactIds.length&&new Set(ds.map(d=>d.id)).size===ds.length&&new Set(ds.map(d=>d.outputId)).size===ds.length,'One derivation per output required');for(const d of ds){require(text(d.id)&&n.output.artifactIds.includes(d.outputId)&&Array.isArray(d.inputIds)&&d.inputIds.length>0&&d.inputIds.every(id=>n.input.artifactIds.includes(id)),'Invalid output/input derivation');require(Array.isArray(d.steps)&&d.steps.length>0&&d.steps.every(text),'Derivation needs readable steps');require(!d.traceIds||(Array.isArray(d.traceIds)&&d.traceIds.every(id=>n.trace.some(t=>t.id===id))),'Invalid derivation trace');}}
+  for(const d of n.process.derivations||[])if(d.visual!==undefined)validateVisual(d.visual);
   require(n.questions.every(x=>text(x.text)&&text(x.impact)&&anchors(n).has(x.field)),'Invalid question anchor');
  }
  for(const a of m.artifacts.filter(a=>a.producedBy))require(m.nodes.find(n=>n.id===a.producedBy).output.artifactIds.includes(a.id),'Producer does not output artifact: '+a.id);
@@ -42,7 +52,7 @@ export function validateModel(m){
   require(Array.isArray(e.values)&&e.values.length===artifacts.size&&new Set(e.values.map(v=>v.artifactId)).size===e.values.length&&e.values.every(v=>artifacts.has(v.artifactId)&&text(v.summary)&&Object.hasOwn(v,'value')),'Running example needs one concrete value per artifact');
   require(Array.isArray(e.steps)&&e.steps.length===m.nodes.length&&new Set(e.steps.map(s=>s.nodeId)).size===e.steps.length,'Running example must cover every step');
   for(const s of e.steps){const n=m.nodes.find(n=>n.id===s.nodeId);require(n&&Array.isArray(s.outputs)&&s.outputs.length===n.output.artifactIds.length&&new Set(s.outputs.map(o=>o.outputId)).size===s.outputs.length,'Invalid running example step outputs');
-   const changes=new Set();for(const o of s.outputs){require(n.output.artifactIds.includes(o.outputId)&&Array.isArray(o.changes)&&o.changes.length>0,'Invalid running example output');for(const c of o.changes){require(text(c.id)&&!changes.has(c.id)&&text(c.before)&&text(c.operation)&&text(c.after),'Running example needs unique, readable before/operation/after changes');changes.add(c.id);}}
+   const changes=new Set();for(const o of s.outputs){require(n.output.artifactIds.includes(o.outputId)&&Array.isArray(o.changes)&&o.changes.length>0,'Invalid running example output');if(o.visual!==undefined)validateVisual(o.visual);for(const c of o.changes){require(text(c.id)&&!changes.has(c.id)&&text(c.before)&&text(c.operation)&&text(c.after),'Running example needs unique, readable before/operation/after changes');changes.add(c.id);}}
   }
  }
  return m;
