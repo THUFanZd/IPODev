@@ -4,7 +4,7 @@
 
 ## 交互示例
 
-[![数据合成流程预览](docs/data-preview.jpg)](https://THUFanZd.github.io/IPODev/data.html)
+[![数据合成流程预览](docs/data-demo.gif)](https://THUFanZd.github.io/IPODev/data.html)
 
 **[打开交互演示：一条测评数据，怎样合成？](https://THUFanZd.github.io/IPODev/data.html)** · [HTML 文件](docs/data.html)
 
