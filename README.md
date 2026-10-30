@@ -4,11 +4,11 @@
 
 ## 交互示例
 
-[![数据合成流程预览](docs/data-demo.gif)](https://THUFanZd.github.io/IPODev/data.html)
+[![SAE 特征解释流程预览](docs/sae-triplet.gif)](https://THUFanZd.github.io/IPODev/sae-triplet.html)
 
-**[打开交互演示：一条测评数据，怎样合成？](https://THUFanZd.github.io/IPODev/data.html)** · [HTML 文件](docs/data.html)
+**[打开交互演示：一个 SAE 特征，怎样得到三端解释？](https://THUFanZd.github.io/IPODev/sae-triplet.html)** · [HTML 文件](docs/sae-triplet.html)
 
-这是使用本 skill 生成的数据合成示例：从学习历史出发，选择主题、整理知识状态与偏好，再合成并校验一条测评数据。打开后可拖动时间线、播放、倒退和查看细节。
+这里展示的是 [SAE_auto](https://github.com/ldwww-divesss/SAE_auto) 仓库中 agent 解释特征的流程。示例追踪同一个 SAE 特征，从观察激活、提出假设，到测试、干预和修正，最终得到输入、输出与功能解释。打开后可拖动时间线、播放、倒退和查看细节。
 
 GitHub README 会过滤脚本，无法在正文中直接运行交互页面；点击上方预览图或链接，即可进入 GitHub Pages 上的完整 HTML。在线演示可添加本地批注并导出 HTML 副本，直接写回文件需使用下方的本机服务。
 
@@ -67,7 +67,7 @@ skills/ipo-dev/
   scripts/serve-running.mjs      本机预览和批注保存
 prototypes/running-example/       早期报销视觉样板，供比较，不是 skill 的案例要求
 tests/                           新播放器与旧版兼容测试
-docs/data.html                   数据合成交互示例，GitHub Pages 发布目录
+docs/sae-triplet.html            SAE 特征解释交互示例，GitHub Pages 发布目录
 ```
 
 旧的 schema v2 / render.mjs / serve.mjs / review.html 留作维护已有 IPO 产物；仓库根目录 project.json、index.html 属于旧示例。新任务使用上面的 running 入口。
