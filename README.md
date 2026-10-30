@@ -1,112 +1,81 @@
-# IPODev
+# IPODev · Running Example
 
-用 Input → Process → Output（IPO）的方式，把 coding agent 设计的实现方案变成可浏览、可批注的 HTML。
+通过一个具体例子，展示某个流程从最初内容到最终结果的变化。agent 根据需求自由设计 HTML/SVG 排版和动画；随包播放器提供时间线、播放控制、细节查看和批注。
 
-写需求时，我们往往知道想得到什么，却没有想清楚所有输入和处理细节。IPODev 帮助你在实现前检查方案，或在实现后理解代码：每个环节用了什么、产出了什么，以及输入是怎样一步步变成输出的。
+## 交互示例
 
-页面展示的是目标功能实际处理的文件和数据，不是把用户 prompt 当作输入，也不是 agent 的工作汇报。
+[![数据合成流程预览](docs/data-preview.jpg)](https://THUFanZd.github.io/IPODev/data.html)
 
-## 能做什么
+**[打开交互演示：一条测评数据，怎样合成？](https://THUFanZd.github.io/IPODev/data.html)** · [HTML 文件](docs/data.html)
 
-- 先看所有环节的总览，再进入某一步查看输入、处理过程和输出。
-- 默认用简短文字解释内容；原始数据、字段含义、代码等细节按需展开。
-- 选择一个输出，查看它使用了哪些输入，以及对应的逐步处理说明。
-- 在对应内容旁添加备注，将带批注的 HTML 交回 agent，继续修改方案或实现。
+这是使用本 skill 生成的数据合成示例：从学习历史出发，选择主题、整理知识状态与偏好，再合成并校验一条测评数据。打开后可拖动时间线、播放、倒退和查看细节。
 
-这是一个 **skill + HTML 模板 + 本地脚本** 的原型，不是独立的 AI 服务。需求分析与修改由读取 skill 的 agent 完成，页面本身不会调用模型。
+GitHub README 会过滤脚本，无法在正文中直接运行交互页面；点击上方预览图或链接，即可进入 GitHub Pages 上的完整 HTML。在线演示可添加本地批注并导出 HTML 副本，直接写回文件需使用下方的本机服务。
 
-## 工作流程：哪些由模型做，哪些由程序做
+## 默认生成什么
 
-这里的“模型”指你正在对话的大语言模型，不是另一项后台服务。
+- 打开就看到一个具体案例，拖动时间线向前或倒退，看同一批对象被处理、移动、拆分或汇合。
+- 可播放、暂停、重播、跳转到关键时刻；简短文字解释当前动作和结果含义。
+- 完整数据、Prompt、代码和设计假设按需展开。
+- 在当前时刻批注，保存至 HTML 与 feedback.json，再交给 agent 调整。
 
-1. **模型理解需求。** 阅读你的需求和相关文件，弄清楚功能要处理什么、最终得到什么；必要输入或规则不明确时，先问你。
-2. **模型设计步骤。** 为每一步说明输入、输出、处理方式，以及输入来自原始文件还是前面某一步的输出。
-3. **模型写出方案文件。** 把这些内容按规定格式保存为 `project.json`。其中内容和内部编号都是模型填写的，不是生成页面的程序设计的。
-4. **程序生成页面。** agent 调用 `scripts/render.mjs`，程序读取 `project.json` 和已有模板 `assets/review.html`，生成 `index.html`。这一过程不调用大语言模型，也不修改模板本身；打开页面后，页面代码将方案显示成卡片、说明和连线。
-5. **你添加批注，程序保存。** agent 启动 `scripts/serve.mjs` 后，你可以在浏览器查看页面、添加批注；程序把批注保存进 HTML 和 `feedback.json`。添加批注不会自动让模型开始修改。
-6. **模型按批注修改。** 你回到对话中要求处理批注，模型读取保存的方案和备注、修改方案，再调用程序生成新页面。只有你要求实现或修改业务代码时，才处理相应代码。
+不要求 IPO 三栏或逐步进入详情。skill 名称保留 ipo-dev，默认产物已经改为 running example 页面。具体流程和业务内容由 agent 设计；播放器没有内置报销等业务案例。
 
-简而言之：**模型写方案，程序生成页面；你写批注，模型按批注修改。**
+## 使用
 
-## 快速使用
-
-需要能读取本地文件、运行命令的 coding agent，以及 Node.js 18+。脚本仅使用 Node.js 内置模块，无需 `npm install`。
-
-下载或克隆仓库后，把下面这段话交给 agent，替换路径和需求即可；不需要先安装到某个特定的 skill 目录。
+把下面的话交给能读文件和运行 Node.js 的 agent：
 
 ```text
-请完整读取 <仓库绝对路径>/skills/ipo-dev/SKILL.md，并按这个 skill 工作。
+请完整读取 <仓库绝对路径>/skills/ipo-dev/SKILL.md，按这个 skill 工作。
 
-我的开发需求：读取一个目录中的 Markdown 笔记，按标签整理，生成一个可搜索的 HTML 索引。
-
-先生成 IPO 方案页面，不要实现业务代码。把页面及方案文件放到当前项目的 ipo-preview 目录。
+需求：用一个具体例子展示 Markdown 笔记如何根据查询词得到搜索结果。
+先生成可拖动时间线的运行示例页面，输出到当前项目的 example-preview，
+不要实现真实搜索服务。
 ```
 
-agent 会结合需求和相关源码识别实际输入、输出与处理过程；必要输入或会影响结果的规则不明确时，skill 要求先向你询问，再生成页面。
-
-打开页面后浏览方案、添加备注，然后告诉 agent：
-
-```text
-请读取 ipo-preview/index.html 中的批注，按批注修改方案并重新生成页面。
-```
-
-需要开始写业务代码时，再明确告诉 agent 按讨论后的方案实现。也可以让它针对已有代码生成 IPO 页面，用于理解和审阅实现。
-
-## 手动预览仓库示例
-
-仓库根目录的 `project.json` 是一个示例：解释 IPODev 自身如何从方案文件生成可批注的 HTML，不是你自己的开发需求。
-
-在仓库根目录运行：
+agent 读取需求和材料，选择案例并设计 `story.json`、`scene.html`、`scene.css`、`scene.js`，然后运行：
 
 ```sh
-node skills/ipo-dev/scripts/render.mjs --project .
-node skills/ipo-dev/scripts/serve.mjs --project . --port 4317
+node <skill>/scripts/build-running.mjs --project <输出目录> --output data.html
+node <skill>/scripts/serve-running.mjs --project <输出目录> --output data.html --port 4341
 ```
 
-浏览器打开 <http://127.0.0.1:4317/>。服务仅监听本机；按 `Ctrl+C` 停止。
+打开服务显示的本机地址。HTML 包含所有脚本样式，也可独立打开，不需要 CDN 或 npm install。文件名可按内容选择，构建和预览使用同一个 --output；省略时默认 index.html。Node.js 18+；随包 GSAP 的来源和许可保存在 assets/vendor/NOTICE.md。
 
-对自己的项目，把 `--project .` 换成存放 `project.json` 的目录。脚本只负责生成页面和保存批注，不会自动理解自然语言、设计方案。
+需求不完整时，agent 先给出连贯设计，并注明影响结果的假设，供你通过页面对齐。案例明确区分实际内容、真实节选与示意数据。
 
-## 批注如何保存
+## 批注与迭代
 
-- 通过本地服务访问：保存备注后，会写入项目目录下的 `index.html` 与 `feedback.json`。
-- 直接打开 HTML：可以添加备注，使用“保存 HTML 副本”导出，再把这个副本交给 agent。
-- agent 可以读取 HTML 内嵌的 `ipo-model` / `ipo-feedback` JSON，不需要从页面截图中猜测内容。
+通过本机服务保存批注，会写入输出目录内所选的 HTML 与 feedback.json。离线时使用“保存 HTML 副本”，把导出的文件交给 agent：
 
-修改方案或反馈文件前，先停止保存服务；修改后重新生成页面并启动服务。保留稳定的数据与步骤编号，可帮助批注继续对应原来的内容。
+```text
+请读取 example-preview/data.html 中的 running-feedback，按批注修改展示方案并重新生成页面。
+```
 
-页面及批注可能包含源码节选、文件路径和业务数据。分享或提交生成物前，请检查其中的内容。
+批注记录 cueId、时间和可选对象 ID。agent 保留旧批注并写入 agentReply。修改源文件前停止保存服务，重建后重启。添加批注不会自动发起模型调用；需要回到对话中提出修改要求。
 
-## 仓库结构
+## 结构
 
 ```text
 skills/ipo-dev/
-  SKILL.md              agent 的工作流程与展示要求
-  references/format.md  方案文件与批注格式
-  assets/review.html    页面模板
-  scripts/              渲染、本地服务及校验逻辑
-project.json            仓库示例方案
-index.html              仓库示例页面
-tests/                  页面生成、编号引用和批注读回测试
-docs/plans/             早期设计记录
+  SKILL.md                       默认生成流程和设计要求
+  references/running-example.md  自由场景、时间线、批注接口
+  assets/running.html            画布外框和控制界面
+  assets/running-player.js       通用播放器及批注交互
+  assets/vendor/                 随包 GSAP
+  scripts/build-running.mjs      打包成单文件 HTML
+  scripts/serve-running.mjs      本机预览和批注保存
+prototypes/running-example/       早期报销视觉样板，供比较，不是 skill 的案例要求
+tests/                           新播放器与旧版兼容测试
+docs/data.html                   数据合成交互示例，GitHub Pages 发布目录
 ```
 
-方案文件格式详见 [format.md](skills/ipo-dev/references/format.md)，agent 工作流程见 [SKILL.md](skills/ipo-dev/SKILL.md)。
+旧的 schema v2 / render.mjs / serve.mjs / review.html 留作维护已有 IPO 产物；仓库根目录 project.json、index.html 属于旧示例。新任务使用上面的 running 入口。
 
-## 基础测试
-
-只保留三项：
-
-1. **HTML 生成：** 用仓库示例方案生成 HTML，再读回方案，检查内容一致、页面脚本没有语法错误。
-2. **编号引用：** 检查方案文件里的输入编号和步骤依赖能被校验；故意写入不存在的编号或去掉必要依赖时，程序应报错。不判断业务方案是否合理。
-3. **批注读回：** 手工创建批注，写入 HTML 后再读回，比较文字和所属位置是否完整保留。不模拟浏览器里的点击和保存。
-
-这些测试不调用大语言模型，也不检验模型使用 skill 的效果。运行命令：
+## 验证
 
 ```sh
-node --test tests/core.test.mjs tests/presentation.test.mjs
+node --test tests/*.test.mjs
 ```
 
-## 当前状态
-
-初步可用的原型，展示质量依赖 agent 对需求与代码的理解。目前没有自动调用模型或后台同步对话的功能；添加批注后，需要回到对话中让 agent 读取并处理。
+测试覆盖构建、脚本解析、内容引用、批注读回与保存冲突。实际生成质量还需用新需求调用 skill，并在浏览器检查布局、拖动与动画。页面本身不会调用模型，生成和修改由使用 skill 的 agent 完成。

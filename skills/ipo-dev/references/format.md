@@ -1,5 +1,7 @@
 # IPO 具体数据流（schema v2）
 
+> 旧版维护接口。仅在维护已有 IPO 产物时使用；新任务按 SKILL.md 与 running-example.md 生成连续 running example，不受此 schema 约束。
+
 `project.json`：`schemaVersion: 2`、`id`、`revision`、`title`、`subtitle`、`goal`、`scope`、`mode`（plan 或 review）、`artifacts`、`flow` 和 `nodes`。title 描述待展示的方案、算法或流程；页面 I/O 对应该对象消费和产生的数据。
 
 `artifacts` 是稳定 ID 的数据对象列表：
